@@ -1,0 +1,110 @@
+@font-face {
+  font-family: 'Roobert';
+  src: url('./assets/fonts/RoobertTRIAL-Regular-BF67243fd53fdf2.otf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('./assets/fonts/RoobertTRIAL-Light-BF67243fd502239.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('./assets/fonts/RoobertTRIAL-Medium-BF67243fd53e059.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('./assets/fonts/RoobertTRIAL-Bold-BF67243fd540abb.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('./assets/fonts/RoobertTRIAL-Heavy-BF67243fd53e164.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+}
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  transition: background-image 1s ease, color 1s ease, background-image 1s ease;
+}
+/* Example usage */
+body {
+  font-family: 'Roobert', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #222;
+  line-height: 1.6;
+  background-image: linear-gradient(270deg,
+      hsl(35deg 45% 83%) 0%,
+      hsl(35deg 35% 83%) 8%,
+      hsl(35deg 24% 84%) 15%,
+      hsl(36deg 13% 84%) 23%,
+      hsl(35deg 24% 84%) 29%,
+      hsl(35deg 35% 83%) 36%,
+      hsl(35deg 45% 83%) 43%,
+      hsl(35deg 35% 83%) 51%,
+      hsl(35deg 24% 84%) 58%,
+      hsl(36deg 13% 84%) 67%,
+      hsl(35deg 24% 84%) 76%,
+      hsl(35deg 35% 83%) 87%,
+      hsl(35deg 45% 83%) 100%);
+}
+
+html.dark body {
+  font-family: 'Roobert', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #E2b489;
+  line-height: 1.6;
+  background-image: linear-gradient(20deg,
+      hsl(0deg 0% 0%) 71%,
+      hsl(29deg 25% 38%) 89%,
+      hsl(29deg 29% 54%) 95%,
+      hsl(29deg 47% 66%) 98%,
+      hsl(29deg 47% 66%) 99%,
+      hsl(29deg 29% 54%) 100%,
+      hsl(29deg 25% 38%) 101%,
+      hsl(0deg 0% 0%) 101%,
+      hsl(29deg 25% 38%) 101%,
+      hsl(29deg 29% 54%) 101%,
+      hsl(29deg 47% 66%) 101%,
+      hsl(29deg 47% 66%) 101%,
+      hsl(29deg 29% 54%) 100%,
+      hsl(29deg 24% 38%) 100%,
+      hsl(0deg 5% 4%) 100%);
+}
+
+/* Add this to your global CSS */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* background-image: linear-gradient(270deg,
+hsl(35deg 45% 83%) 0%,
+hsl(35deg 35% 83%) 8%,
+hsl(35deg 24% 84%) 15%,
+hsl(36deg 13% 84%) 23%,
+hsl(35deg 24% 84%) 29%,
+hsl(35deg 35% 83%) 36%,
+hsl(35deg 45% 83%) 43%,
+hsl(35deg 35% 83%) 51%,
+hsl(35deg 24% 84%) 58%,
+hsl(36deg 13% 84%) 67%,
+hsl(35deg 24% 84%) 76%,
+hsl(35deg 35% 83%) 87%,
+hsl(35deg 45% 83%) 100%); */
