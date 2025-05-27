@@ -1,0 +1,8 @@
+.outlined-text {
+    font-size: 4rem;
+    font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 1px #d1a77d; /* For most WebKit browsers */
+    text-: 1px #d1a77d; /* Optional fallback */
+  }
+  

@@ -1,13 +1,14 @@
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { X, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import { useRef, useEffect } from "react";
 const NavBar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
     const navRef = useRef<HTMLElement>(null);
+    const navigate = useNavigate();
     const toggleMenu = () => {
         if (isOpen) {
             gsap.to(mobileMenuRef.current, {
@@ -50,8 +51,12 @@ const NavBar = () => {
     }, [isOpen]);
 
 
+    function handleLoginClick(): void {
+        navigate('/login')
+    }
+
     return (
-        <nav className="flex items-center justify-center bg-black text-white text-lg w-full relative"
+        <nav className="sticky top-0 z-50 flex items-center justify-center bg-black text-white text-lg w-full "
             ref={navRef}
         >
             <div className="flex justify-between items-center w-[90%] p-3">
@@ -72,16 +77,18 @@ const NavBar = () => {
                 {/* Desktop Navigation */}
                 <div className="hidden md:flex text-[#C0C0C0] cursor-pointer">
                     <ul className="flex gap-10">
-                        <Link to="#" className="hover:text-[#DDA87C] transition-colors duration-200">Home</Link>
-                        <Link to="#" className="hover:text-[#DDA87C] transition-colors duration-200">About us</Link>
-                        <Link to="#" className="hover:text-[#DDA87C] transition-colors duration-200">Affiliate Registration</Link>
-                        <Link to="#" className="hover:text-[#DDA87C] transition-colors duration-200">Partner</Link>
+                        <Link to="/" className="hover:text-[#DDA87C] transition-colors duration-200">Home</Link>
+                        <Link to="aboutUs" className="hover:text-[#DDA87C] transition-colors duration-200">About us</Link>
+                        <Link to="affiliateReg" className="hover:text-[#DDA87C] transition-colors duration-200">Affiliate Registration</Link>
+                        <Link to="Partner" className="hover:text-[#DDA87C] transition-colors duration-200">Partner</Link>
                     </ul>
                 </div>
 
                 {/* Desktop Auth Section */}
                 <div className="hidden md:flex gap-3">
-                    <Button className="border-[#DDA87C] text-[#DDA87C] border-2 p-3 md:p-5 bg-transparent rounded text-lg text-center hover:bg-[#DDA87C] hover:text-black transition-all duration-500">
+                    <Button
+                        onClick={handleLoginClick}
+                        className="border-[#DDA87C] text-[#DDA87C] border-2 p-3 md:p-5 bg-transparent rounded text-lg text-center hover:bg-[#DDA87C] hover:text-black transition-all duration-500 cursor-pointer">
                         Login
                     </Button>
                     {/* <Button className="border-[#DDA87C] text-[#DDA87C] border-2 p-3 md:p-5 bg-transparent rounded text-lg text-center hover:bg-[#DDA87C] hover:text-black transition-all duration-300">

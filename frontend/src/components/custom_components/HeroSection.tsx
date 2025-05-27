@@ -9,7 +9,7 @@ import Star from './Star';
 
 
 const HeroSection = () => {
-    
+
     const { theme, setTheme } = useTheme()
     const [shouldRotate, setShouldRotate] = useState<boolean>(false);
     const darkModeBtnRef = useRef<HTMLButtonElement>(null);
@@ -20,7 +20,7 @@ const HeroSection = () => {
     const [exploreRotate, setExploreRotate] = useState<boolean>(false);
     const cardRef1 = useRef<HTMLDivElement>(null)
     const cardRef2 = useRef<HTMLDivElement>(null)
-    
+
     //gsap animation
     useEffect(() => {
         console.log("fetching");
@@ -60,7 +60,7 @@ const HeroSection = () => {
                 },
                 {
                     opacity: 1,
-                    clipPath: 'inset(0 0% 0 0%)', 
+                    clipPath: 'inset(0 0% 0 0%)',
                     duration: 1,
                     ease: "power1.inOut"
                 }
@@ -141,7 +141,7 @@ const HeroSection = () => {
     }
 
     return (
-        <section className="flex flex-col mt-5 mb-5 w-full  h-fit  px-4 sm:px-0 " aria-label="hero section">
+        <section className="flex flex-col mt-5 mb-10 w-full  h-fit  px-4 sm:px-0 " aria-label="hero section">
 
             <div className='flex flex-col  lg:flex-row items-center justify-between'>
                 <div className="p-4 w-full lg:w-auto flex  flex-col items-start justify-start">
@@ -155,7 +155,7 @@ const HeroSection = () => {
                                 className={`bg-transparent shadow-none border-none hover:bg-transparent hover:shadow-none hover:border-none transition-transform duration-500 hover:scale-105 hidden sm:block`}
                                 ref={darkModeBtnRef}
                             >
-                                <Star width='w-1' height='h-20' shouldRotate={shouldRotate} className={`${cn("dark:bg-[#ffe5cf] bg-black")}`} />
+                                <Star width='w-1' height='h-20' shouldRotate={shouldRotate} className={`${cn("dark:bg-[#ffe5cf] bg-black")} `} className1='flex justify-center  items-center' />
                             </Button>
                             <p className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl">Connect</p>
                         </div>
@@ -189,10 +189,10 @@ const HeroSection = () => {
 
                             {/* Half-visible stars */}
                             <div className="absolute bottom-[1px] right-[3px] z-0 ">
-                                <Star width="w-[3px]" height="h-10" rotations={[97, 50, -60, -20]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} />
+                                <Star width="w-[3px]" height="h-10" rotations={[97, 50, -60, -20]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center  items-center' />
                             </div>
                             <div className="absolute bottom-[-2px] right-10 z-0">
-                                <Star width="w-[3px]" height="h-7" rotations={[-10, -60, 40, 90]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} />
+                                <Star width="w-[3px]" height="h-7" rotations={[-10, -60, 40, 90]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center  items-center' />
                             </div>
                         </button>
 
@@ -200,34 +200,34 @@ const HeroSection = () => {
                 </div>
 
                 <div className="relative w-[200px] h-[250px] sm:w-[250px] sm:h-[300px] lg:w-[300px] lg:h-[350px] bg-gradient-to-br from-beige-200 to-beige-300 hidden lg:block mt-8 lg:mt-0">
-                  
+
                     <div className="absolute top-4 left-4">
-                        <Star width="w-[4px]" height="h-9" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[4px]" height="h-9" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                     <div className="absolute top-7 left-16 ml-4">
-                        <Star width="w-1" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-1" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                     <div className="absolute top-5  left-32 ml-9">
-                        <Star width="w-[4px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[4px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                     <div className="absolute top-5 left-44 ml-13">
-                        <Star width="w-[2.8px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[2.8px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
 
                     {/* Middle cluster */}
                     <div className="absolute top-22 left-20 ml-22">
-                        <Star width="w-[6px]" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[6px]" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                     <div className="absolute top-21 left-40 ml-18">
-                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
 
                     {/* Bottom right trail */}
                     <div className="absolute top-35 left-48 ml-11">
-                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                     <div className="absolute top-49 left-52 ml-8">
-                        <Star width="w-[3.6px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} />
+                        <Star width="w-[3.6px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
                     </div>
                 </div>
             </div>
@@ -267,7 +267,7 @@ const HeroSection = () => {
                             platform. Whether you're a vendor scaling fast or a user chasing the<br />
                             next win — this is where digital access becomes an experience.
                         </p>
-                        <div className="mt-2 w-[80%]">  
+                        <div className="mt-2 w-[80%]">
                             <img
                                 ref={imgRef2}
                                 src="/images/heroImg2.avif"
