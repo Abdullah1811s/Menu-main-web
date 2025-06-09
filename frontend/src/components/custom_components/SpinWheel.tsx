@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
@@ -15,7 +13,7 @@ interface WheelSegment {
 export default function SpinningWheel() {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const containerRef = useRef<HTMLDivElement>(null)
-    const revealRef = useRef<HTMLDivElement>(null)
+    const borderRef = useRef<HTMLDivElement>(null)
     const [isSpinning, setIsSpinning] = useState(false)
     const [rotation, setRotation] = useState(0)
     const [winner, setWinner] = useState<string | null>(null)
@@ -41,7 +39,6 @@ export default function SpinningWheel() {
         const radius = Math.max(Math.min(centerX, centerY) - 10)
 
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-
         ctx.save()
         ctx.translate(centerX, centerY)
         ctx.rotate((rotation * Math.PI) / 180)
@@ -59,7 +56,6 @@ export default function SpinningWheel() {
         ctx.stroke()
 
         const segmentAngle = (2 * Math.PI) / segments.length
-
         segments.forEach((segment, index) => {
             const startAngle = index * segmentAngle
             const endAngle = (index + 1) * segmentAngle
@@ -79,9 +75,9 @@ export default function SpinningWheel() {
             ctx.textAlign = "center"
             ctx.textBaseline = "middle"
             ctx.fillStyle = segment.color === "#2d2417" ? "#dda87c" : "#2d2417"
+
             const lines = segment.text.split("\n")
             const lineHeight = 20
-
             lines.forEach((line, i) => {
                 const textDistance = radius * 0.6
                 ctx.font = "bold 14px Arial"
@@ -95,7 +91,6 @@ export default function SpinningWheel() {
                     ctx.fillText(line, textDistance, i * lineHeight - ((lines.length - 1) * lineHeight) / 2)
                 }
             })
-
             ctx.restore()
         })
 
@@ -147,9 +142,9 @@ export default function SpinningWheel() {
         const animate = () => {
             const elapsed = Date.now() - startTime
             const progress = Math.min(elapsed / spinDuration, 1)
-
             const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
             const currentRotation = startRotation + totalRotation * easeOut(progress)
+
             setRotation(currentRotation)
 
             if (progress < 1) {
@@ -169,7 +164,6 @@ export default function SpinningWheel() {
 
         canvas.width = 500
         canvas.height = 500
-
         drawWheel()
 
         const handleResize = () => {
@@ -191,51 +185,110 @@ export default function SpinningWheel() {
     }, [rotation])
 
     useEffect(() => {
-        if (!containerRef.current || !revealRef.current) return
+        if (!containerRef.current || !borderRef.current || !canvasRef.current) return;
 
-        gsap.fromTo(
-            revealRef.current,
-            { clipPath: "polygon(0 0, 100% 0, 100% 0, 0 0)" },
-            {
-                clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)",
-                duration: 1.5,
-                ease: "power3.out",
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    start: "top 80%",
-                    toggleActions: "play none none reverse",
-                },
-            }
-        )
+        // Initial state
+        gsap.set(borderRef.current, {
+            width: "100px",
+            height: "100px",
+            opacity: 1,
+            borderWidth: 6,
+            pointerEvents: "auto"
+        });
 
-        gsap.fromTo(
-            containerRef.current,
-            { boxShadow: "0 0 0px #dda87c" },
-            {
-                boxShadow: "0 0 30px #dda87c",
-                duration: 1,
-                ease: "power1.inOut",
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    start: "top 80%",
-                    toggleActions: "play none none reverse",
-                },
+        gsap.set(canvasRef.current, {
+            opacity: 0,
+            scale: 0.8
+        });
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 80%",
+                toggleActions: "restart none none reverse", // Replay on scroll up
+                markers: false
             }
-        )
-    }, [])
+        });
+
+        // Step 1: Grow the border
+        tl.to(borderRef.current, {
+            width: "100%",
+            height: "100%",
+            duration: 2,
+            ease: "power3.out"
+        });
+
+        // Step 2: Fade and scale in canvas
+        tl.to(canvasRef.current, {
+            opacity: 1,
+            scale: 1,
+            duration: 1.5,
+            ease: "power2.out"
+        }, "-=1.2");
+
+        // Step 3: Glow effect
+        tl.to(borderRef.current, {
+            boxShadow: "inset 0 0 60px 10px #dda87c",
+            duration: 1,
+            ease: "power2.inOut"
+        }, "-=0.8");
+
+        // Step 4: Fade out border visually (but keep it in DOM)
+        tl.to(borderRef.current, {
+            opacity: 0,
+            duration: 1,
+            ease: "power1.out",
+            onComplete: () => {
+                if (borderRef.current) {
+                    borderRef.current.style.pointerEvents = "none";
+                }
+            },
+            onReverseComplete: () => {
+                if (borderRef.current) {
+                    borderRef.current.style.opacity = "1";
+                    borderRef.current.style.pointerEvents = "auto";
+                    borderRef.current.style.boxShadow = "inset 0 0 60px 10px #dda87c";
+                }
+            }
+        });
+
+        return () => {
+            ScrollTrigger.getAll().forEach(st => st.kill());
+        };
+    }, []);
+
+
 
     return (
         <div
             ref={containerRef}
-            className="flex flex-col relative items-center justify-center gap-6 border-3 w-full border-green-700 p-4 bg-black overflow-hidden"
+            className="flex flex-col relative items-center justify-center gap-6 w-full   p-4 bg-black overflow-hidden min-h-screen"
         >
             <img
                 src="/images/wheelBg.png"
                 alt="wheel bg"
-                className="absolute inset-0 object-cover w-full h-full"
+                className="absolute inset-0 object-cover w-full h-full opacity-30"
             />
 
-            <div ref={revealRef} className="relative w-[500px] h-[500px] z-10">
+            {/* Green border that grows to reveal wheel */}
+            <div
+                ref={borderRef}
+                className="absolute top-1/2 left-1/2 w-full pointer-events-none z-5"
+                style={{
+                    borderStyle: "solid",
+                    borderWidth: "6px",
+                    height: "100px",
+                    background: "rgba(0, 0, 0, 0.8)",
+                    transform: "translate(-50%, -50%) skew(-20deg)",
+                    transformOrigin: "center",
+                    boxShadow: "inset 0 0 60px 10px #dda87c", // thicker, softer glow
+                    willChange: "opacity"
+                }}
+            />
+
+
+
+            <div className="relative w-[500px] h-[500px] z-10">
                 <canvas
                     ref={canvasRef}
                     className="absolute inset-0 w-full h-full"
@@ -254,17 +307,17 @@ export default function SpinningWheel() {
             <Button
                 onClick={spinWheel}
                 disabled={isSpinning}
-                className="bg-[#dda87c] text-[#2d2417] hover:bg-[#c13c17] hover:text-white font-bold px-8 py-4 text-lg z-10"
+                className="bg-[#dda87c] text-[#2d2417] hover:bg-[#c13c17] hover:text-white font-bold px-8 py-4 text-lg z-10 transition-all duration-300 hover:scale-105"
             >
                 {isSpinning ? "Spinning..." : "SPIN THE WHEEL"}
             </Button>
 
-            {winner && (
-                <div className="mt-4 p-4 bg-[#dda87c] text-[#2d2417] rounded-md text-center font-bold z-10">
+            {/* {winner && (
+                <div className="mt-4 p-4 bg-[#dda87c] text-[#2d2417] rounded-md text-center font-bold z-10 animate-pulse">
                     <h3 className="text-xl">Congratulations!</h3>
                     <p className="whitespace-pre-line">{winner}</p>
                 </div>
-            )}
+            )} */}
         </div>
     )
 }

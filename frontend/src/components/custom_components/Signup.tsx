@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import gsap from "gsap";
 const userTypes = [
-    "One-Time User",
-    "Monthly Loyalty Member",
-    "Vendor / Partner",
+    "User",
+    "   Partner",
     "Affiliate",
 ];
 export default function Signup() {
@@ -30,17 +29,16 @@ export default function Signup() {
         )
     }, [])
     function handleOnClick(): void {
-        if (selected === "One-Time User") {
-            navigate('/UserOnBoard')
+        if (selected === "User") {
+            navigate('/user-sign-up')
 
         } else if (selected === "Monthly Loyalty Member") {
             console.log("You selected Monthly Loyalty Member");
 
         } else if (selected === "Vendor / Partner") {
-            console.log("You selected Vendor / Partner");
-
+            navigate('/partner-sign-up')
         } else if (selected === "Affiliate") {
-            console.log("You selected Affiliate");
+             navigate('/affiliate-sign-up')
 
         } else {
             console.log("No user type selected");

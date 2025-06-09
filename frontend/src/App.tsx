@@ -35,22 +35,24 @@ function App() {
 
   const isOnInitial = window.location.href.includes('initial-page');
   const isOnUser = window.location.href.includes('user-sign-up');
-
+  const isOnPartner = window.location.href.includes('partner-sign-up');
+  const isOnAffiliate = window.location.href.includes('affiliate-sign-up');
+  console.log(isOnPartner, isOnUser);
   return (
     <>
-      {!isOnInitial || !isOnUser && <NavBar />}
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      {!(isOnInitial || isOnUser || isOnPartner || isOnAffiliate) && <NavBar />}
+      <ThemeProvider defaultTheme="dark" >
         <main
           className={
-
             cn("w-full h-full flex flex-col items-center", "dark:text-[#FFFF] text-black")
-
           }
         >
-          <Outlet />
+          <Outlet />  
         </main>
       </ThemeProvider>
-      {!isOnInitial || !isOnUser && <Footer />}
+      {/* {!(isOnInitial || isOnUser || isOnPartner || isOnAffiliate) && <Footer />} */}
+
+
     </>
   );
 }

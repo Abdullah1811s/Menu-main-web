@@ -25,8 +25,9 @@ const LandingPage = () => {
                 <OurPartner />
                 <Leaderboard />
                 <SpinningWheel />
-                <Raffle />
+                {/* <Raffle /> */}
             </main>
+            
         </>
     )
 }

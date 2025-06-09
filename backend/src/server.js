@@ -9,6 +9,7 @@ import affiliateRoutes from './routes/affiliateRoute.js'
 import wheelRoutes from './routes/wheelRoute.js'
 import vendorRoutes from './routes/vendorroute.js'
 import memberShipRoute from './routes/membershipRoute.js'
+import uploadRoute from './routes/cloudinaryRoute.js'
 const app = express();
 app.use(cookieParser());
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -24,9 +25,11 @@ connectDB();
 
 app.use('/api/auth', authRoutes);   
 app.use('/api/affiliate', affiliateRoutes);
-app.use('/api/vendor' , vendorRoutes)
-app.use('/api/wheel' , wheelRoutes)
-app.use('/api/membership' , memberShipRoute)
+app.use('/api/vendor' , vendorRoutes);
+app.use('/api/wheel' , wheelRoutes);
+app.use('/api/membership' , memberShipRoute);
+app.use('/api/membership' , memberShipRoute);
+app.use('/api/generateSignature' , uploadRoute);
 
 
 

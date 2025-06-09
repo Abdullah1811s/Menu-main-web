@@ -238,8 +238,8 @@ const HeroSection = () => {
                         ref={cardRef1}
                         className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}>
                         <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")} `}>
-                            More Customers,<br />
-                            more exposure, 0% commission
+                            0% commissions, more<br/> customers, more exposure
+
                         </p>
                         <Link to="#" className="self-end text-sm text-[#976941]">
                             For Partners
@@ -249,8 +249,8 @@ const HeroSection = () => {
                         ref={cardRef2}
                         className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}>
                         <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")} `}>
-                            Earn up to 30%<br />
-                            commission promoting The Menu.
+                            Earn up to 30% commission<br/> promoting the MENU
+
                         </p>
                         <Link to="#" className="self-end text-sm text-[#976941]">
                             For Affiliates

@@ -4,6 +4,7 @@ import { User, Mail, Lock, Phone, EyeOff, Eye, ChevronLeft, Globe, CreditCard, B
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import gsap from "gsap";
+import Star from "@/components/custom_components/Star";
 
 const countries = [
     { code: "+27", name: "SA" },
@@ -1362,7 +1363,7 @@ const AffiliateOnBoard = () => {
 
                             {step === 5 && (
                                 <div className="space-y-6 w-full max-w-md mx-auto">
-                                    
+
 
                                     <div className="space-y-4">
                                         {/* Password Field */}
@@ -1521,7 +1522,11 @@ const AffiliateOnBoard = () => {
 
                 </div>
             </div>
-
+            <img src="/images/grad.avif" alt="" className="absolute bottom-0 left-0 " />
+            <div className="absolute bottom-0 right-10 m-4 flex gap-24">
+                <Star height="h-14" width="w-1" />
+                <Star width="w-1" height="h-24" />
+            </div>
         </main>
     );
 }

@@ -1,4 +1,3 @@
-"use client"
 
 import { useState, useEffect, useRef } from "react"
 import { gsap } from "gsap"
@@ -82,14 +81,6 @@ const OurPartner = () => {
             <h2 className="text-3xl sm:text-4xl md:text-5xl text-white mb-6">Our Partner</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
-                {/* Terms Column */}
-                <div className="flex justify-center">
-                    {partners.length > 0 && (
-                        <div className=" text-2xl sm:text-3xl md:text-4xl mt-4 md:mt-8">
-                            {partners[currentIndex].terms}
-                        </div>
-                    )}
-                </div>
 
                 {/* Names Column */}
                 <div className="relative h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden flex items-center justify-center">
@@ -107,7 +98,6 @@ const OurPartner = () => {
                         ))}
                     </div>
                 </div>
-
                 {/* Image Column */}
                 <div className="flex justify-center ">
                     {partners.length > 0 && (
@@ -118,6 +108,19 @@ const OurPartner = () => {
                         />
                     )}
                 </div>
+                {/* Terms Column */}
+                <div className="flex justify-center">
+                    {partners.length > 0 && (
+                        <div className=" text-2xl sm:text-3xl md:text-4xl mt-4 md:mt-8">
+                            {partners[currentIndex].terms}
+                        </div>
+                    )}
+                </div>
+
+
+
+
+
             </div>
         </section>
     )

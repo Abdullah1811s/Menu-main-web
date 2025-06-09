@@ -7,18 +7,67 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Node modules
+node_modules/
+
+# Build output
+dist/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+.storybook-out/
+coverage/
+
+# Local env files
+.env
+.env.*.local
+.env.local
+
+# Vite cache
+.vite/
+.cache/
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# macOS
 .DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*.swp
+
+# Editor settings
+.vscode/
+!.vscode/extensions.json
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
+# Test output
+test-output/
+coverage/
+*.lcov
+
+# Optional: Ignore lock files if using a specific package manager
+# Uncomment the ones you’re NOT using to avoid conflicts
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Optional: Ignore generated assets or screenshots
+screenshots/
+public/static/

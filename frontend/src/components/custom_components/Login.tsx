@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -6,9 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Mail, Lock } from "lucide-react"
 import gsap from "gsap"
 import { Link } from "react-router-dom"
+
 const loginSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address" }),
     password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+    userType: z.enum(["user", "partner", "affiliate"]),
 })
 
 type LoginFormValues = z.infer<typeof loginSchema>
@@ -44,6 +45,7 @@ export default function LoginForm() {
         defaultValues: {
             email: "",
             password: "",
+            userType: "user",
         },
     })
 
@@ -69,7 +71,6 @@ export default function LoginForm() {
                     <div className="bg-black p-2 w-fit rounded-lg shadow-[0_0_8px_rgba(255,255,255,0.2)]">
                         <img src="/images/wheel.png" alt="" />
                     </div>
-
                 </div>
 
                 <h1 className="text-2xl font-semibold text-white text-center mb-1">Welcome Back</h1>
@@ -80,7 +81,42 @@ export default function LoginForm() {
                     </Link>
                 </p>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-2 ">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+                    {/* User Type Radio Buttons */}
+                    <div className="mb-4">
+                        <label className="block text-gray-400 text-sm mb-2">Login as:</label>
+                        <div className="flex space-x-4">
+                            <label className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    value="user"
+                                    {...register("userType")}
+                                    className="form-radio text-[#c59f7a] focus:ring-[#c59f7a]"
+                                    defaultChecked
+                                />
+                                <span className="ml-2 text-white">User</span>
+                            </label>
+                            <label className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    value="partner"
+                                    {...register("userType")}
+                                    className="form-radio text-[#c59f7a] focus:ring-[#c59f7a]"
+                                />
+                                <span className="ml-2 text-white">Partner</span>
+                            </label>
+                            <label className="inline-flex items-center">
+                                <input
+                                    type="radio"
+                                    value="affiliate"
+                                    {...register("userType")}
+                                    className="form-radio text-[#c59f7a] focus:ring-[#c59f7a]"
+                                />
+                                <span className="ml-2 text-white">Affiliate</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div>
                         <div className="relative mt-4">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
@@ -112,8 +148,6 @@ export default function LoginForm() {
                             Forgot your Password? Click <span className="text-[#c59f7a] cursor-pointer">Here</span>
                         </Link>
                     </div>
-
-
 
                     <button
                         type="submit"

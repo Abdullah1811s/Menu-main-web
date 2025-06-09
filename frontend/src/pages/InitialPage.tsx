@@ -78,6 +78,7 @@ const InitialPage = () => {
 
     return (
         <main className="w-[90%] mx-auto  flex h-full flex-col items-center">
+            <img src="/images/grad.avif" alt="" className="absolute top-0 right-0 rotate-180" />
             <nav className='w-full p-5'>
                 <img
                     src="/images/Logo.png"
@@ -126,14 +127,18 @@ const InitialPage = () => {
                                 <div
                                     key={option.id}
                                     onClick={() => setSelectedOption(option.id)}
-                                    className={`group w-56 sm:w-60 md:w-64 h-60 sm:h-64 md:h-66 flex flex-col items-center justify-center text-center border cursor-pointer px-4 py-6 transition-all duration-500 border-[#dda87c] hover:bg-[#836750] rounded-sm text-[#dda87c] hover:text-black ${selectedOption === option.id ? 'bg-[#dda87c]' : 'hover:bg-[#1e1e1e]'
+                                    className={`group w-56 sm:w-60 md:w-64 h-60 sm:h-64 md:h-66 flex flex-col items-center justify-center text-center border cursor-pointer px-4 py-6 transition-all duration-500 border-[#dda87c] hover:bg-[#836750] rounded-sm text-[#dda87c] hover:text-black ${selectedOption === option.id ? 'bg-[#dda87c] text-black' : 'hover:bg-[#1e1e1e]'
                                         }`}
                                 >
                                     <img
                                         src={option.imgSrc}
                                         alt={option.heading}
-                                        className="w-20 h-20 sm:w-24 sm:h-24 md:w-26 md:h-26 mb-4 transition-all duration-200 group-hover:scale-105 group-hover:filter  group-hover:grayscale group-hover:brightness-0"
+                                        className={`w-20 h-20 sm:w-24 sm:h-24 md:w-26 md:h-26 mb-4 transition-all duration-200 
+    group-hover:scale-105 group-hover:filter group-hover:grayscale group-hover:brightness-0
+    ${selectedOption === option.id ? "grayscale brightness-0" : ""}
+  `}
                                     />
+
                                     <p className="text-lg sm:text-xl md:text-2xl font-medium">
                                         {option.heading}
                                     </p>
@@ -179,8 +184,8 @@ const InitialPage = () => {
             </div>
 
 
-            <div className="absolute bottom-0 left-0 w-[300px] h-[200px] gradient pointer-events-none blur-xl z-0" />
-            <div className="absolute top-0 right-0 w-[300px] h-[200px] gradient pointer-events-none blur-2xl z-0" />
+            <img src="/images/grad.avif" alt="" className="absolute bottom-0 left-0 " />
+
         </main>
 
     );
