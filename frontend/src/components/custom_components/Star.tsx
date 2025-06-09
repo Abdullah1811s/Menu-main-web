@@ -10,8 +10,10 @@ const Star = ({
 }) => {
     return (
         <div
-            className={`group relative w-full h-full  transform transition-transform duration-500 ${className1} ${shouldRotate ? 'rotate-[-180deg]' : ''}  group-hover:bg-white`}
+            className={`group relative w-full h-full transition-transform duration-500 ${className1} ${shouldRotate ? 'rotate-180' : ''}`}
+            style={{ transformOrigin: 'center center' }} // This ensures it rotates in place
         >
+
 
             {rotations.map((angle, index) => (
                 <div

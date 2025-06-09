@@ -6,19 +6,27 @@ import PartnerComponent from "@/components/custom_components/PartnerComponent"
 import Raffle from "@/components/custom_components/Raffle"
 import SpinningWheel from "@/components/custom_components/SpinWheel"
 import WhyJoin from "@/components/custom_components/WhyJoin"
+import { cn } from "@/lib/utils"
 
 const LandingPage = () => {
     return (
         <>
+            <main
+                className={
 
-            <HeroSection />
-            <WhyJoin />
-            <PartnerComponent/>
-            <MissionComponent/>
-            <OurPartner/>
-            <Leaderboard/>
-            <SpinningWheel/>
-            <Raffle/>
+                    cn("w-[90%] mx-auto h-full flex flex-col items-center", "dark:text-[#FFFF] text-black")
+
+                }
+            >
+                <HeroSection />
+                <WhyJoin />
+                <PartnerComponent />
+                <MissionComponent />
+                <OurPartner />
+                <Leaderboard />
+                <SpinningWheel />
+                <Raffle />
+            </main>
         </>
     )
 }

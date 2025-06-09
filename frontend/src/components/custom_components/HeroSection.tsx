@@ -131,7 +131,7 @@ const HeroSection = () => {
     const handleDarkModeBtn = () => {
         setShouldRotate(prev => !prev);
         if (theme === "dark")
-            setTheme("light")
+            setTheme("dark")
         else
             setTheme("dark");
     }

@@ -49,7 +49,8 @@ body {
   padding: 0;
   color: #222;
   line-height: 1.6;
-  background-image: linear-gradient(270deg,
+  background-color: #000000;
+  /* background-image: linear-gradient(270deg,
       hsl(35deg 45% 83%) 0%,
       hsl(35deg 35% 83%) 8%,
       hsl(35deg 24% 84%) 15%,
@@ -62,7 +63,7 @@ body {
       hsl(36deg 13% 84%) 67%,
       hsl(35deg 24% 84%) 76%,
       hsl(35deg 35% 83%) 87%,
-      hsl(35deg 45% 83%) 100%);
+      hsl(35deg 45% 83%) 100%); */
 }
 
 html.dark body {
