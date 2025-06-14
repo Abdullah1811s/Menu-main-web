@@ -48,6 +48,7 @@ export const login = async (req, res) => {
 
         const payload = {
             id: verifyUser._id,
+            name: verifyUser.name,
             email: verifyUser.email,
             role: verifyUser.role,
             availableRoles
@@ -56,7 +57,7 @@ export const login = async (req, res) => {
 
         const accessToken = generateToken(payload, "15m");
         const frontendToken = generateToken(payload, "2d");
-        
+
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
@@ -146,6 +147,7 @@ export const signup = async (req, res) => {
 
         const payload = {
             id: newUser._id,
+            name: newUser.name,
             email: newUser.email,
             role: newUser.role,
         };
@@ -184,7 +186,7 @@ export const switchRole = async (req, res) => {
     try {
         const { newRole } = req.body;
         const { email, availableRoles } = req.user;
-        console.log(newRole , availableRoles , email);
+        console.log(newRole, availableRoles, email);
         if (!newRole) {
             return res.status(400).json({ message: "Please provide a role to switch to." });
         }
@@ -194,26 +196,30 @@ export const switchRole = async (req, res) => {
         }
 
         let newId = null;
+        let newName = null;
 
         if (newRole === 'user') {
             const userDoc = await userModel.findOne({ email });
             if (!userDoc) return res.status(404).json({ message: "User account not found." });
             newId = userDoc._id;
+            newName = userDoc.name;
         } else if (newRole === 'affiliate') {
             const affiliateDoc = await affiliateModel.findOne({ email });
             if (!affiliateDoc) return res.status(404).json({ message: "Affiliate account not found." });
             newId = affiliateDoc._id;
+            newName = affiliateDoc.name; 
         } else if (newRole === 'vendor') {
             const vendorDoc = await vendorModel.findOne({ businessEmail: email });
             if (!vendorDoc) return res.status(404).json({ message: "Vendor account not found." });
             newId = vendorDoc._id;
+            newName = vendorDoc.businessName; 
         } else {
             return res.status(400).json({ message: "Invalid role provided." });
         }
 
-
         const newPayload = {
             id: newId,
+            name: newName,
             role: newRole,
             availableRoles,
             email

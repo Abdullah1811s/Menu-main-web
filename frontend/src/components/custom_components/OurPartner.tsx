@@ -77,18 +77,39 @@ const OurPartner = () => {
     }, [partners, currentIndex])
 
     return (
-        <section className="flex flex-col mt-28 mb-28 w-full px-4 py-6 box-border bg-black">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl text-white mb-6">Our Partner</h2>
+        <section className="flex flex-col mt-16 sm:mt-20 md:mt-28 mb-16 sm:mb-20 md:mb-28 w-full px-4 py-6 box-border bg-black">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white mb-4 sm:mb-6 text-center md:text-left">Our Partner</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-white">
+            {/* Mobile Layout - Stacked */}
+            <div className="block md:hidden space-y-6 text-white">
+                <div className="text-center">
+                    <div className="text-xl sm:text-2xl text-[#d1a77d] font-bold mb-4">
+                        {partners.length > 0 && partners[currentIndex].name}
+                    </div>
+                    {partners.length > 0 && (
+                        <img
+                            src={partners[currentIndex].img || "/placeholder.svg"}
+                            alt={partners[currentIndex].name}
+                            className="max-h-[50px] sm:max-h-[60px] object-contain mx-auto mb-4"
+                        />
+                    )}
+                    {partners.length > 0 && (
+                        <div className="text-lg sm:text-xl">
+                            {partners[currentIndex].terms}
+                        </div>
+                    )}
+                </div>
+            </div>
 
+            {/* Desktop Layout - Grid */}
+            <div className="hidden md:grid grid-cols-3 gap-4 lg:gap-6 text-white">
                 {/* Names Column */}
-                <div className="relative h-[200px] sm:h-[250px] md:h-[300px] overflow-hidden flex items-center justify-center">
-                    <div ref={namesContainerRef} className="absolute space-y-4">
+                <div className="relative h-[250px] lg:h-[300px] overflow-hidden flex items-center justify-center">
+                    <div ref={namesContainerRef} className="absolute space-y-3 lg:space-y-4">
                         {partners.map((p, idx) => (
                             <div
                                 key={idx}
-                                className={`text-xl sm:text-3xl md:text-5xl cursor-pointer transition-colors duration-300 ${idx === currentIndex
+                                className={`text-2xl lg:text-3xl xl:text-5xl cursor-pointer transition-colors duration-300 ${idx === currentIndex
                                     ? "text-[#d1a77d] font-bold"
                                     : "text-white"
                                     }`}
@@ -98,29 +119,26 @@ const OurPartner = () => {
                         ))}
                     </div>
                 </div>
+
                 {/* Image Column */}
-                <div className="flex justify-center ">
+                <div className="flex justify-center items-center">
                     {partners.length > 0 && (
                         <img
                             src={partners[currentIndex].img || "/placeholder.svg"}
                             alt={partners[currentIndex].name}
-                            className="max-h-[60px] sm:max-h-[70px] md:max-h-[80px] object-contain"
+                            className="max-h-[60px] lg:max-h-[70px] xl:max-h-[80px] object-contain"
                         />
                     )}
                 </div>
+
                 {/* Terms Column */}
-                <div className="flex justify-center">
+                <div className="flex justify-center items-center">
                     {partners.length > 0 && (
-                        <div className=" text-2xl sm:text-3xl md:text-4xl mt-4 md:mt-8">
+                        <div className="text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl text-center">
                             {partners[currentIndex].terms}
                         </div>
                     )}
                 </div>
-
-
-
-
-
             </div>
         </section>
     )

@@ -4,12 +4,9 @@ import { useTheme } from "@/components/theme-provider"
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 import gsap from 'gsap';
-
 import Star from './Star';
 
-
 const HeroSection = () => {
-
     const { theme, setTheme } = useTheme()
     const [shouldRotate, setShouldRotate] = useState<boolean>(false);
     const darkModeBtnRef = useRef<HTMLButtonElement>(null);
@@ -23,9 +20,7 @@ const HeroSection = () => {
 
     //gsap animation
     useEffect(() => {
-
         if (darkModeBtnRef.current) {
-
             gsap.to(darkModeBtnRef.current, {
                 rotation: 360,
                 repeat: -1,
@@ -43,13 +38,11 @@ const HeroSection = () => {
                 },
                 {
                     opacity: 1,
-
                     clipPath: 'inset(0 0% 0 0)',
                     duration: 1.2,
                     ease: 'power2.out'
                 }
             );
-
         }
         if (imgRef2.current) {
             gsap.fromTo(imgRef2.current,
@@ -80,7 +73,6 @@ const HeroSection = () => {
                 })
         }
         if (cardRef1.current && cardRef2.current) {
-
             gsap.fromTo(
                 cardRef1.current,
                 {
@@ -110,7 +102,6 @@ const HeroSection = () => {
                     duration: 1,
                     ease: 'power2.out',
                 },
-
             );
         }
         if (text2Ref.current) {
@@ -124,7 +115,6 @@ const HeroSection = () => {
                 ease: "power1.inOut",
             })
         }
-
     }, [])
 
     const handleDarkModeBtn = () => {
@@ -140,21 +130,21 @@ const HeroSection = () => {
     }
 
     return (
-        <section className="flex flex-col mt-5 mb-10 w-full  h-fit  px-4 sm:px-0 " aria-label="hero section">
-
-            <div className='flex flex-col  lg:flex-row items-center justify-between'>
-                <div className="p-4 w-full lg:w-auto flex  flex-col items-start justify-start">
+        <section className="flex flex-col mt-5 mb-10 w-full h-fit " aria-label="hero section">
+            {/* Top Section */}
+            <div className='flex flex-col lg:flex-row items-center justify-between'>
+                <div className="p-4 w-full lg:w-auto flex flex-col items-start justify-start">
                     <h1 className="text-3xl md:text-4xl lg:text-4xl">Revolutionizing how</h1>
 
-                    <div className="flex flex-col sm:flex-row sm:gap-6 lg:gap-12 items-baseline sm:items-center">
+                    <div className="flex flex-col sm:flex-row sm:gap-4 lg:gap-12 items-baseline sm:items-center">
                         <p className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl">Vendors</p>
                         <div className="flex items-center gap-2 sm:gap-4 lg:gap-12">
                             <Button
                                 onClick={handleDarkModeBtn}
-                                className={`bg-transparent shadow-none border-none hover:bg-transparent hover:shadow-none hover:border-none transition-transform duration-500 hover:scale-105 hidden sm:block`}
+                                className="bg-transparent shadow-none border-none hover:bg-transparent hover:shadow-none hover:border-none transition-transform duration-500 hover:scale-105 hidden sm:block"
                                 ref={darkModeBtnRef}
                             >
-                                <Star width='w-1' height='h-20' shouldRotate={shouldRotate} className={`${cn("dark:bg-[#ffe5cf] bg-black")} `} className1='flex justify-center  items-center' />
+                                <Star width='w-1' height='h-20' shouldRotate={shouldRotate} className={`${cn("dark:bg-[#ffe5cf] bg-black")}`} className1='flex justify-center items-center' />
                             </Button>
                             <p className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl">Connect</p>
                         </div>
@@ -165,12 +155,12 @@ const HeroSection = () => {
                             ref={imgRef1}
                             src="/images/heroVendor.avif"
                             alt="Vendor illustration"
-                            className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-auto lg:h-auto"
+                            className=" w-auto h-auto"
                         />
                         <p className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl">& Grow</p>
                     </div>
 
-                    <div className="flex w-full lg:w-[80%] mt-3 lg:items-center justify-between">
+                    <div className="flex w-full lg:w-[80%] mt-3 lg:items-center justify-between flex-col sm:flex-row gap-4 sm:gap-0">
                         <p
                             ref={text1Ref}
                             className={`w-full text-[#373737] lg:w-[65%] text-sm sm:text-base md:text-lg ${cn("dark:text-[#c0c0c0]")}`}>
@@ -180,65 +170,60 @@ const HeroSection = () => {
                         </p>
 
                         <button
-                            className={`group bg-transparent relative border rounded px-6 py-3  transition-transform duration-500 hover:scale-95 hidden sm:flex items-center justify-center text-xl font-medium z-10 overflow-hidden hover:bg-black  ${cn("dark:border-[#e2b489] dark:hover:text-black dark:hover:bg-[#e2b489] border-black hover:text-white ")}`}
+                            className={`group bg-transparent relative border rounded px-6 py-3 transition-transform duration-500 hover:scale-95 flex items-center justify-center text-xl font-medium z-10 overflow-hidden hover:bg-black ${cn(
+                                "dark:border-[#e2b489] dark:hover:text-black dark:hover:bg-[#e2b489] border-black hover:text-white"
+                            )}`}
                             onMouseEnter={rotateStar}
-
                         >
                             <span className="z-10">Explore Now</span>
-
-                            {/* Half-visible stars */}
-                            <div className="absolute bottom-[1px] right-[3px] z-0 ">
-                                <Star width="w-[3px]" height="h-10" rotations={[97, 50, -60, -20]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center  items-center' />
+                            <div className="absolute bottom-[1px] right-[3px] z-0">
+                                <Star width="w-[3px]" height="h-10" rotations={[97, 50, -60, -20]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center items-center' />
                             </div>
                             <div className="absolute bottom-[-2px] right-10 z-0">
-                                <Star width="w-[3px]" height="h-7" rotations={[-10, -60, 40, 90]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center  items-center' />
+                                <Star width="w-[3px]" height="h-7" rotations={[-10, -60, 40, 90]} className={`${cn("dark:group-hover:bg-black group-hover:bg-white")}`} shouldRotate={exploreRotate} className1='flex justify-center items-center' />
                             </div>
                         </button>
-
                     </div>
                 </div>
 
+                {/* Stars Container - Hidden on mobile, shown from lg */}
                 <div className="relative w-[200px] h-[250px] sm:w-[250px] sm:h-[300px] lg:w-[300px] lg:h-[350px] bg-gradient-to-br from-beige-200 to-beige-300 hidden lg:block mt-8 lg:mt-0">
-
                     <div className="absolute top-4 left-4">
-                        <Star width="w-[4px]" height="h-9" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[4px]" height="h-9" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
                     <div className="absolute top-7 left-16 ml-4">
-                        <Star width="w-1" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-1" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
-                    <div className="absolute top-5  left-32 ml-9">
-                        <Star width="w-[4px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                    <div className="absolute top-5 left-32 ml-9">
+                        <Star width="w-[4px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
                     <div className="absolute top-5 left-44 ml-13">
-                        <Star width="w-[2.8px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[2.8px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
-
-                    {/* Middle cluster */}
                     <div className="absolute top-22 left-20 ml-22">
-                        <Star width="w-[6px]" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[6px]" height="h-14" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
                     <div className="absolute top-21 left-40 ml-18">
-                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
-
-                    {/* Bottom right trail */}
                     <div className="absolute top-35 left-48 ml-11">
-                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[3.7px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
                     <div className="absolute top-49 left-52 ml-8">
-                        <Star width="w-[3.6px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center  items-center' />
+                        <Star width="w-[3.6px]" height="h-8" rotations={[-10, -60, 40, 85]} shouldRotate={shouldRotate} className1='flex justify-center items-center' />
                     </div>
                 </div>
             </div>
 
-            <div className=" mt-10 flex flex-col md:flex-row justify-between gap-4  px-4">
-                <div className="flex flex-col md:flex-row gap-4 md:w-1/2 mt-auto">
+            {/* Bottom Section */}
+            <div className="mt-10 flex flex-col md:flex-row justify-between gap-6 px-4">
+                <div className="flex flex-col md:flex-row gap-4 w-full md:w-1/2">
                     <div
                         ref={cardRef1}
-                        className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}>
-                        <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")} `}>
+                        className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}
+                    >
+                        <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")}`}>
                             0% commissions, more<br /> customers, more exposure
-
                         </p>
                         <Link to="#" className="self-end text-sm text-[#976941]">
                             For Partners
@@ -246,10 +231,10 @@ const HeroSection = () => {
                     </div>
                     <div
                         ref={cardRef2}
-                        className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}>
-                        <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")} `}>
+                        className={`w-full md:w-1/2 p-4 border-2 rounded-xl bg-opacity-80 flex flex-col justify-between h-32 ${cn("dark:border-[#ffdfbe] border-black")}`}
+                    >
+                        <p className={`text-base leading-snug ${cn("dark:text-[#fff7f0] text-black")}`}>
                             Earn up to 30% commission<br /> promoting the MENU
-
                         </p>
                         <Link to="#" className="self-end text-sm text-[#976941]">
                             For Affiliates
@@ -257,29 +242,28 @@ const HeroSection = () => {
                     </div>
                 </div>
 
-                <div className="md:w-1/2">
+                <div className="w-full md:w-1/2 mt-4 md:mt-0">
                     <div className="flex flex-col items-end justify-end text-right">
                         <p
                             ref={text2Ref}
-                            className={` text-sm md:text-base mb-2 ${cn("dark:text-[#B4B4B4] text-black")}`}>
+                            className={`text-sm md:text-base mb-2 ${cn("dark:text-[#B4B4B4] text-black")}`}
+                        >
                             Merging competition, commerce, and community into one seamless<br />
                             platform. Whether you're a vendor scaling fast or a user chasing the<br />
                             next win — this is where digital access becomes an experience.
                         </p>
-                        <div className="mt-2 w-[80%]">
+                        <div className="mt-2 w-full md:w-[80%]">
                             <img
                                 ref={imgRef2}
                                 src="/images/heroImg2.avif"
                                 alt="hero img 2"
-                                className="w-full h-[50%] object-cover"
+                                className="w-full h-auto object-cover"
                             />
                         </div>
                     </div>
                 </div>
             </div>
-
         </section>
-
     );
 };
 

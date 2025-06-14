@@ -187,13 +187,14 @@ export const MissionComponent = () => {
   }, []);
 
   return (
-    <section className="flex flex-col mt-10 mb-5 w-full h-fit px-2 p-2 box-border bg-black">
-      <h2 className="text-5xl text-white">Our Mission</h2>
-      <p className="text-7xl mt-10 text-center text-white">
+    <section className="flex flex-col mt-10 mb-5 w-full h-fit px-4 sm:px-6 md:px-8 box-border bg-black">
+      <h2 className="text-3xl sm:text-4xl md:text-5xl text-white">Our Mission</h2>
+
+      <p className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl mt-6 sm:mt-8 md:mt-10 text-center text-white leading-tight sm:leading-normal">
         <span className="outlined-text">The Menu</span> isn't just about deals
         <span
           ref={box1}
-          className="relative bg-[#d1a77d] w-14 h-14 rounded-md inline-block m-3 align-middle overflow-hidden cursor-pointer"
+          className="relative bg-[#d1a77d] w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-md inline-block mx-1 sm:mx-2 md:mx-3 align-middle overflow-hidden cursor-pointer"
         >
           <img
             ref={imageRef1}
@@ -203,15 +204,14 @@ export const MissionComponent = () => {
             onContextMenu={(e) => e.preventDefault()}
             draggable={false}
           />
-
         </span>
-        it's <br />
+        it's <br className="sm:hidden" />
         about making <span className="outlined-text">every rand</span> go further.
-        By<br />
+        By<br className="sm:hidden" />
         joining,
         <span
           ref={box2}
-          className="relative bg-[#d1a77d] w-14 h-14 rounded-md inline-block align-middle m-3 overflow-hidden cursor-pointer"
+          className="relative bg-[#d1a77d] w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-md inline-block align-middle mx-1 sm:mx-2 md:mx-3 overflow-hidden cursor-pointer"
         >
           <img
             ref={imageRef2}
@@ -222,11 +222,11 @@ export const MissionComponent = () => {
             draggable={false}
           />
         </span>
-        you're boosting <span className="outlined-text">local <br /> businesses </span>
+        you're boosting <span className="outlined-text">local <br className="sm:hidden" /> businesses </span>
         and shaping
         <span
           ref={box3}
-          className="relative bg-[#d1a77d] w-14 h-14 m-3 rounded-md inline-block align-middle overflow-hidden cursor-pointer"
+          className="relative bg-[#d1a77d] w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 mx-1 sm:mx-2 md:mx-3 rounded-md inline-block align-middle overflow-hidden cursor-pointer"
         >
           <img
             ref={imageRef3}
@@ -237,7 +237,7 @@ export const MissionComponent = () => {
             draggable={false}
           />
         </span>
-        a <span className="outlined-text">fairer<br /> economy</span>
+        a <span className="outlined-text">fairer<br className="sm:hidden" /> economy</span>
       </p>
     </section>
   );

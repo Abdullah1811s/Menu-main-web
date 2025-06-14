@@ -6,9 +6,9 @@ import { PartnerAnimatedComponent } from "./PartnerAnimatedComponent"
 const PartnerComponent = () => {
   return (
     <section className="mt-20 mb-28 w-full h-fit px-4 overflow-visible">
-      
+
       <div className="mt-10 w-full flex flex-col md:grid md:grid-cols-[25%_30%_35%] gap-6 md:gap-2 overflow-visible">
-       
+
         <div className="order-1 mb-4 md:mb-0">
           <div className="flex flex-col h-full gap-5">
             <div className="bg-[#e2b489] w-full p-1 px-3 rounded-md text-black">
@@ -20,9 +20,20 @@ const PartnerComponent = () => {
         </div>
 
 
-        <div className=" rounded-md order-3 md:order-2 mt-4 md:mt-0">
-          <PartnerAnimatedComponent/>
+        <div className="relative rounded-md order-3 md:order-2 mt-4 md:mt-0 h-64 md:h-96 overflow-hidden">
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+          >
+            <source src="animation.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
+
 
         <div className="flex flex-col p-2 md:p-4 gap-3 order-2 md:order-3 mt-4 md:mt-0">
           {/* First stat box */}

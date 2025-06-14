@@ -144,30 +144,89 @@ export default function Leaderboard(): React.ReactElement {
   }
 
   return (
-    <section className="flex flex-col mt-20 mb-5 w-full h-fit px-2 p-2 box-border bg-black">
-      <h2 className="text-5xl text-white">Gamified Elements</h2>
+    <section className="flex flex-col mt-12 sm:mt-16 md:mt-20 mb-3 sm:mb-4 md:mb-5 w-full h-fit px-2 p-2 box-border bg-black">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white mb-4 sm:mb-6 text-center md:text-left">Gamified Elements</h2>
       <div className="w-full bg-black text-white">
 
-        <div className="flex max-w-6xl mx-auto p-4 gap-16  items-center justify-center">
-          <NumberTwoLead  leaderboardData={leaderboardData[0]} />
-          <NumberOneLead leaderboardData={leaderboardData[0]} />
-          <NumberThreeLead leaderboardData={leaderboardData[0]} />
-
+        {/* Mobile Podium Layout */}
+        <div className="block md:hidden">
+          <div className="flex flex-col items-center gap-4 p-2 sm:p-4">
+            <NumberOneLead leaderboardData={leaderboardData[0]} />
+            <div className="flex gap-4 w-full justify-center">
+              <NumberTwoLead leaderboardData={leaderboardData[0]} />
+              <NumberThreeLead leaderboardData={leaderboardData[0]} />
+            </div>
+          </div>
         </div>
 
+        {/* Desktop Podium Layout */}
+        <div className="hidden md:flex max-w-6xl mx-auto p-4 gap-8 lg:gap-12 xl:gap-16 items-center justify-center">
+          <NumberTwoLead leaderboardData={leaderboardData[0]} />
+          <NumberOneLead leaderboardData={leaderboardData[0]} />
+          <NumberThreeLead leaderboardData={leaderboardData[0]} />
+        </div>
 
-        <div className="max-w-6xl mx-auto p-4">
+        <div className="max-w-6xl mx-auto p-2 sm:p-4">
           <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-y-4">
+            {/* Mobile Card Layout */}
+            <div className="block md:hidden space-y-3">
+              {filteredData.slice(0, displayCount).map((user: LeaderboardEntry) => (
+                <div
+                  key={user.rank}
+                  className="bg-[#241c15] hover:bg-[#272727] transition-colors rounded-lg p-4"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="text-lg font-bold">#{user.rank}</div>
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
+                      <img
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={user.username}
+                        width={32}
+                        height={32}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm sm:text-base">{user.username}</div>
+                      <div className="text-gray-400 text-xs sm:text-sm">{user.handle}</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                    <div>
+                      <span className="text-gray-400">Signup:</span> {user.signupPoints}
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Login:</span> {user.dailyLoginPoints}
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Referral:</span> {user.referralPoints}
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Wheel:</span> {user.wheelRotatePoints}
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-600">
+                    <div className="text-right">
+                      <span className="text-[#d1a77d] font-bold text-sm sm:text-base">
+                        Total: {user.totalPoints}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout */}
+            <table className="hidden md:table w-full border-separate border-spacing-y-4">
               <thead>
                 <tr className="text-left">
-                  <th className="py-3 px-4 font-medium">Rank</th>
-                  <th className="py-3 px-4 font-medium">Username</th>
-                  <th className="py-3 px-4 font-medium">Signup Points</th>
-                  <th className="py-3 px-4 font-medium">Daily Login Points</th>
-                  <th className="py-3 px-4 font-medium">Referral Points</th>
-                  <th className="py-3 px-4 font-medium">Wheel Rotate Points</th>
-                  <th className="py-3 px-4 font-medium">Total Points</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Rank</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Username</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Signup Points</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Daily Login Points</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Referral Points</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Wheel Rotate Points</th>
+                  <th className="py-3 px-2 lg:px-4 font-medium text-sm lg:text-base">Total Points</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,10 +235,10 @@ export default function Leaderboard(): React.ReactElement {
                     key={user.rank}
                     className="bg-[#241c15] hover:bg-[#272727] transition-colors rounded-lg overflow-hidden"
                   >
-                    <td className="py-3 px-3 rounded-l-lg">{user.rank}</td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
+                    <td className="py-3 px-2 lg:px-3 rounded-l-lg text-sm lg:text-base">{user.rank}</td>
+                    <td className="py-3 px-2 lg:px-3">
+                      <div className="flex items-center gap-2 lg:gap-3">
+                        <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
                           <img
                             src={user.avatar || "/placeholder.svg"}
                             alt={user.username}
@@ -189,32 +248,28 @@ export default function Leaderboard(): React.ReactElement {
                           />
                         </div>
                         <div>
-                          <div className="font-medium">{user.username}</div>
-                          <div className="text-gray-400 text-sm">{user.handle}</div>
+                          <div className="font-medium text-sm lg:text-base">{user.username}</div>
+                          <div className="text-gray-400 text-xs lg:text-sm">{user.handle}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">{user.signupPoints}</td>
-                    <td className="py-3 px-3">{user.dailyLoginPoints}</td>
-                    <td className="py-3 px-3">{user.referralPoints}</td>
-                    <td className="py-3 px-3">{user.wheelRotatePoints}</td>
-                    <td className="py-3 px-3 rounded-r-lg">{user.totalPoints}</td>
+                    <td className="py-3 px-2 lg:px-3 text-sm lg:text-base">{user.signupPoints}</td>
+                    <td className="py-3 px-2 lg:px-3 text-sm lg:text-base">{user.dailyLoginPoints}</td>
+                    <td className="py-3 px-2 lg:px-3 text-sm lg:text-base">{user.referralPoints}</td>
+                    <td className="py-3 px-2 lg:px-3 text-sm lg:text-base">{user.wheelRotatePoints}</td>
+                    <td className="py-3 px-2 lg:px-3 rounded-r-lg text-sm lg:text-base">{user.totalPoints}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {displayCount < filteredData.length && (
-              <div className="flex justify-center mt-6 mb-4">
-                <CustomButton label="View more" onClick={handleViewMore}/>
+              <div className="flex justify-center mt-4 sm:mt-6 mb-2 sm:mb-4">
+                <CustomButton label="View more" onClick={handleViewMore} />
               </div>
             )}
           </div>
         </div>
-
-
-
-
       </div>
     </section>
   )
