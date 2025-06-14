@@ -1,58 +1,95 @@
 import './App.css'
 import NavBar from './components/custom_components/NavBar'
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
-import Loading from './components/custom_components/Loading';
+// import Loading from './components/custom_components/Loading';
 import { useEffect, useState } from 'react';
 import { cn } from './lib/utils';
-import Footer from './components/custom_components/Footer';
-import InitialPage from './pages/InitialPage';
+import { Toaster } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { useLocation } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import { login } from './store/authSlice';
 
+interface TokenPayload {
+  id: string;
+  email: string;
+  role: 'user' | 'partner' | 'affiliate' | 'admin';
+  availableRoles: string[];
+}
 function App() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const location = useLocation();
+  // const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [hideNav, setHideNav] = useState<boolean>(false);
 
-
-  const [loading, setLoading] = useState(() => {
-    return localStorage.getItem('loadingComplete') === 'true';
-  });
 
   useEffect(() => {
-    if (loading && window.location.pathname === '/') {
-      navigate('initial-page');
+    const token = localStorage.getItem('frontendToken');
+
+    if (!token) return;
+
+    try {
+      const decoded: TokenPayload = jwtDecode(token);
+      if (decoded?.id && decoded?.role) {
+        dispatch(login(decoded.role));
+      }
+    } catch (error) {
+      console.error('Token decode error:', error);
+      localStorage.removeItem('frontendToken');
     }
-  }, [loading, navigate]);
+  }, [dispatch]);
 
-  if (!loading) {
-    return (
-      <Loading
-        onComplete={() => {
-          setLoading(true);
-          localStorage.setItem('loadingComplete', 'true');
-        }}
-      />
-    );
-  }
 
-  const isOnInitial = window.location.href.includes('initial-page');
-  const isOnUser = window.location.href.includes('user-sign-up');
-  const isOnPartner = window.location.href.includes('partner-sign-up');
-  const isOnAffiliate = window.location.href.includes('affiliate-sign-up');
-  console.log(isOnPartner, isOnUser);
+  useEffect(() => {
+    const pathname = location.pathname;
+
+    const isOnInitial = pathname === '/';
+    const isOnUser = pathname.includes('user-sign-up');
+    const isOnPartner = pathname.includes('partner-sign-up');
+    const isOnAffiliate = pathname.includes('affiliate-sign-up');
+    const isDashboard = pathname.includes('dashboard');
+
+
+    if (isOnInitial || isOnUser || isOnPartner || isOnAffiliate || isDashboard) {
+      setHideNav(true);
+    } else {
+      setHideNav(false);
+    }
+  }, [location]);
+
+  // if (!isLoading) return <Loading onComplete={() => setIsLoading(true)} />;
+
   return (
     <>
-      {!(isOnInitial || isOnUser || isOnPartner || isOnAffiliate) && <NavBar />}
-      <ThemeProvider defaultTheme="dark" >
+      {!hideNav && <NavBar />}
+      <ThemeProvider defaultTheme="dark">
         <main
-          className={
-            cn("w-full h-full flex flex-col items-center", "dark:text-[#FFFF] text-black")
-          }
+          className={cn(
+            "w-full h-full flex flex-col items-center",
+            "dark:text-[#FFFF] text-black"
+          )}
         >
-          <Outlet />  
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: '#2C272A',
+                color: '#DDA87C',
+                border: '1px solid #DDA87C',
+              },
+              success: {
+                icon: '🎡',
+              },
+              error: {
+                icon: '❌',
+              },
+            }}
+          />
+          <Outlet />
         </main>
+
       </ThemeProvider>
-      {/* {!(isOnInitial || isOnUser || isOnPartner || isOnAffiliate) && <Footer />} */}
-
-
     </>
   );
 }

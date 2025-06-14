@@ -22,7 +22,7 @@ const router = express.Router();
 router.get('/', getAllVendor);
 router.get('/getBusiness', checkVendorEmailExists );
 router.post('/loginVendor', RateLimiter, loginVendor)
-router.post('/registerVendor', RateLimiter, registerVendor);
+router.post('/sign-up', RateLimiter, registerVendor);
 router.post('/updateVendor/:id', authenticate ,updatedVendor);
 router.post('/updateStatus', authenticate, authorization(['admin']) , updateStatus);
 router.post('/delVendor', authenticate, authorization(['admin']) , deleteVendor);

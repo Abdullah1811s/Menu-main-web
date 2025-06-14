@@ -1,62 +1,83 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import userModel from "../models/user.model.js";
+import affiliateModel from '../models/affiliate.model.js';
+import vendorModel from '../models/vendor.model.js';
 import { sendEmail } from "../utils/sendEmail.js";
 import { generateResetToken, generateToken } from "../utils/generateToken.js";
 import { verifyCaptcha } from '../utils/verifyReCaptcha.js';
-
-//TODO:Referral link 
 
 
 export const login = async (req, res) => {
     try {
         const { email, password, reCaptcha } = req.body;
-        const isCaptchaValid = await verifyCaptcha(reCaptcha);
-        if (!isCaptchaValid) {
-            return res.status(400).json({ message: "Captcha verification failed please reload and try again" });
-        }
+        const availableRoles = ['user'];
+
+        // const isCaptchaValid = await verifyCaptcha(reCaptcha);
+        // if (!isCaptchaValid) {
+        //     return res.status(400).json({ message: "Captcha verification failed. Please reload and try again." });
+        // }
+
+
         if (!email || !password) {
             return res.status(400).json({ message: "Please provide both email and password!" });
         }
 
 
-        const verifyUser = await userModel.findOne({ email: email });
+        const verifyUser = await userModel.findOne({ email });
+
+        //==========================section for role switching==============================
+        const registerAsAffiliate = await affiliateModel.findOne({ email });
+        const registerAsVendor = await vendorModel.findOne({ email });
+        if (registerAsAffiliate)
+            availableRoles.push("affiliate")
+        if (registerAsVendor)
+            availableRoles.push("vendor");
+
 
         if (!verifyUser) {
             return res.status(404).json({ message: "Invalid email or password" });
         }
+
 
         const isPasswordCorrect = await verifyUser.comparePassword(password);
         if (!isPasswordCorrect) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
+
         const payload = {
             id: verifyUser._id,
-            name: verifyUser.name,
             email: verifyUser.email,
-            role: verifyUser.role
+            role: verifyUser.role,
+            availableRoles
         };
 
-        const token = generateToken(payload, '7h');
 
-        res.cookie('token', token, {
+        const accessToken = generateToken(payload, "15m");
+        const frontendToken = generateToken(payload, "2d");
+        
+
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
-            maxAge: 7 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 15 * 60 * 1000,
         });
+
 
         res.status(200).json({
             message: "Login successful",
+            frontendToken,
             user: {
                 id: verifyUser._id,
-                role: verifyUser.role
+                role: verifyUser.role,
+                availableRoles
             }
         });
 
     } catch (error) {
-        console.error("❌ Login error:", {
+        console.error("Login error:", {
             message: error.message,
             stack: error.stack,
             timestamp: new Date().toISOString()
@@ -91,21 +112,15 @@ export const signup = async (req, res) => {
             rewardEngagementFrequency,
             preferredNotificationMethod
         } = req.body;
-        const isCaptchaValid = await verifyCaptcha(captchaToken);
-        if (!isCaptchaValid) {
-            return res.status(400).json({ message: "Captcha verification failed please reload and try again" });
-        }
 
         if (!name || !email || !password || !phone || !town || !city || !province || !street || !postalCode) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-
         const isEmailExist = await userModel.findOne({ email });
         if (isEmailExist) {
             return res.status(409).json({ message: "Email already registered, please log in" });
         }
-
 
         const newUser = await userModel.create({
             name,
@@ -119,7 +134,6 @@ export const signup = async (req, res) => {
             street,
             town,
             postalCode,
-            referralCode,
             incomeRange,
             shoppingPreference,
             interestCategories,
@@ -132,28 +146,30 @@ export const signup = async (req, res) => {
 
         const payload = {
             id: newUser._id,
-            name: newUser.name,
             email: newUser.email,
-            role: newUser.role
+            role: newUser.role,
         };
 
 
-        const token = generateToken(payload, '7h');
+        const accessToken = generateToken(payload, "15m");
 
+        const frontendToken = generateToken(payload, "7d");
 
-        res.cookie('token', token, {
+        res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'strict',
-            maxAge: 7 * 60 * 60 * 1000,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 15 * 60 * 1000,
         });
 
 
         res.status(200).json({
             message: "Signup successful",
+            frontendToken,
             user: {
                 id: newUser._id,
-                role: newUser.role
+                name: newUser.name,
+                role: newUser.role,
             }
         });
 
@@ -162,6 +178,73 @@ export const signup = async (req, res) => {
         res.status(500).json({ message: "Internal server error. Please try again later." });
     }
 };
+
+
+export const switchRole = async (req, res) => {
+    try {
+        const { newRole } = req.body;
+        const { email, availableRoles } = req.user;
+        console.log(newRole , availableRoles , email);
+        if (!newRole) {
+            return res.status(400).json({ message: "Please provide a role to switch to." });
+        }
+
+        if (!availableRoles.includes(newRole)) {
+            return res.status(403).json({ message: "You are not authorized to switch to this role." });
+        }
+
+        let newId = null;
+
+        if (newRole === 'user') {
+            const userDoc = await userModel.findOne({ email });
+            if (!userDoc) return res.status(404).json({ message: "User account not found." });
+            newId = userDoc._id;
+        } else if (newRole === 'affiliate') {
+            const affiliateDoc = await affiliateModel.findOne({ email });
+            if (!affiliateDoc) return res.status(404).json({ message: "Affiliate account not found." });
+            newId = affiliateDoc._id;
+        } else if (newRole === 'vendor') {
+            const vendorDoc = await vendorModel.findOne({ businessEmail: email });
+            if (!vendorDoc) return res.status(404).json({ message: "Vendor account not found." });
+            newId = vendorDoc._id;
+        } else {
+            return res.status(400).json({ message: "Invalid role provided." });
+        }
+
+
+        const newPayload = {
+            id: newId,
+            role: newRole,
+            availableRoles,
+            email
+        };
+
+        const frontendToken = generateToken(newPayload, "2d");
+        const accessToken = generateToken(newPayload, "15m");
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.status(200).json({
+            message: "Role switched successfully",
+            frontendToken,
+            user: {
+                id: newId,
+                role: newRole,
+                availableRoles
+            }
+        });
+
+    } catch (error) {
+        console.error("Switch role error:", error.message);
+        return res.status(500).json({ message: "Something went wrong while switching roles." });
+    }
+};
+
 
 export const forgetPass = async (req, res) => {
     try {
@@ -289,6 +372,27 @@ export const resetPass = async (req, res) => {
         return res.status(500).json({
             message: "Server error while resetting password",
             error: error.message
+        });
+    }
+};
+
+
+export const logout = async (req, res) => {
+    try {
+
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+        });
+
+        return res.status(200).json({
+            message: "Logout successful",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        return res.status(500).json({
+            message: "Server error during logout",
         });
     }
 };

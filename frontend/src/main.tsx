@@ -12,23 +12,46 @@ import InitialPage from './pages/InitialPage.tsx'
 import store from './store/store.ts';
 import AffiliateOnBoard from './pages/affiliateOnBoard.tsx';
 import PartnerOnBoard from './pages/PartnerOnBoard.tsx';
+import {
+  AffiliatePrivateRoute,
+  UserPrivateRoute
+} from './components/index.ts'
+import { AuthLoader } from './utils/authLoader.ts';
+import UserDashboard from './pages/UserDashboard.tsx';
+import AffiliateDashboard from './pages/AffiliateDashboard.tsx';
+
+//this function will check if the user is authenticated 
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <>
-      <Route path='initial-page' element={<InitialPage />} />
-      <Route path="/" element={<App />} >
-        <Route path='landing-page' element={<LandingPage />} />
-        <Route path='login' element={<Login />} />
-        <Route path='signUp' element={<Signup />} />
-        <Route path='user-sign-up' element={<UserOnBoard />} />
-        <Route path='affiliate-sign-up' element={<AffiliateOnBoard />} />
-        <Route path='partner-sign-up' element={<PartnerOnBoard />} />
-      </Route>
-    </>
+    <Route path="/" element={<App />}>
+      <Route index element={<InitialPage />} loader={AuthLoader} />
+      <Route path="landing-page" element={<LandingPage />} />
+      <Route path="login" element={<Login />} />
+      <Route path="signUp" element={<Signup />} />
+      <Route path="user-sign-up" element={<UserOnBoard />} />
+      <Route path="affiliate-sign-up" element={<AffiliateOnBoard />} />
+      <Route path="partner-sign-up" element={<PartnerOnBoard />} />
 
+
+      //======================USER ROUTES==============================
+
+      <Route path="user/:userId" element={<UserPrivateRoute />}>
+        <Route index element={<LandingPage />} />
+        <Route path='dashboard' element={<UserDashboard />} />
+      </Route>
+
+      //=====================AFFILIATE ROUTES=============================
+      <Route path='/affiliate/:id' element={<AffiliatePrivateRoute />}>
+        <Route index element={<LandingPage />} />
+        <Route path='dashboard' element={<AffiliateDashboard />} />
+      </Route>
+
+
+    </Route>
   )
 );
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>

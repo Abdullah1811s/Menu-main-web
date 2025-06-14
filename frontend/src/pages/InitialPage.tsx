@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Intital.css'
 import gsap from 'gsap';
-import { useSelector } from 'react-redux';
 
 const options = [
     {
@@ -30,8 +29,25 @@ const options = [
 ];
 
 const InitialPage = () => {
+    
+    // useEffect(() => {
+    //     const token = localStorage.getItem("FUToken");
+
+    //     if (!token) return;
+
+    //     try {
+    //         const decoded: TokenPayload = jwtDecode(token);
+
+    //         if (decoded?.id && decoded?.role === 'user') {
+    //             navigate(`/user/${decoded.id}`);
+    //         }
+    //     } catch (err) {
+    //         console.error("Invalid token:", err);
+    //     }
+    // }, [navigate]);
+
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
-    const [buttonClicked, setButtonClicked] = useState(false);
+    const [, setButtonClicked] = useState(false);
     const dollarREf = useRef<HTMLDivElement>(null)
     const clapREf = useRef<HTMLDivElement>(null)
     const celebREf = useRef<HTMLDivElement>(null)
@@ -157,7 +173,7 @@ const InitialPage = () => {
 
                         <button
                             onClick={handleContinueAsGuest}
-                            className="text-[#8b6b50] underline text-sm sm:text-base"
+                            className="text-[#8b6b50] underline text-sm sm:text-base cursor-pointer"
                         >
                             Continue as guest
                         </button>

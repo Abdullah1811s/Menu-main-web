@@ -15,7 +15,7 @@ import { authorization, authenticate } from '../middleware/authMiddleware.js'
 const router = express.Router();
 router.get('/', RateLimiter,  getAllAffiliate);
 router.post('/login' , RateLimiter , LoginAffiliate);
-router.post('/signup' , RateLimiter , signupAffiliate);
+router.post('/sign-up' , RateLimiter , signupAffiliate);
 router.post("/forgot-password", forgetPass);
 router.put("/reset-password/:token", resetPass);
 router.put("/updateStatus", authenticate, authorization(["admin" , "superadmin"]), updateStatus);

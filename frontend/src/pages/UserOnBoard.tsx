@@ -1,10 +1,17 @@
-import { zodResolver } from "@hookform/resolvers/zod";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from "react";
-import { User, Mail, Lock, Phone, EyeOff, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import toast from "react-hot-toast";
 import gsap from "gsap";
+import { User, Mail, Lock, Phone, EyeOff, Eye, ArrowLeft } from "lucide-react";
+
 import Star from "@/components/custom_components/Star";
+import { login } from "@/store/authSlice";
 
 const countries = [
   { code: "+27", name: "SA" },
@@ -36,13 +43,14 @@ const formSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
   phone: z.string().min(9, "Phone number must be at least 9 digits"),
+  town: z.string().min(1, "Please enter the town name"),
   province: z.enum(provinces, {
     errorMap: () => ({ message: "Please select a province" }),
   }),
   city: z.enum(allCities as [string, ...string[]], {
     errorMap: () => ({ message: "Please select a city" }),
   }),
-  streetAddress: z.string().min(1, "Street address is required"),
+  street: z.string().min(1, "Street address is required"),
   postalCode: z.string().min(4, "Postal code must be at least 4 characters"),
   incomeRange: z.enum([
     "Under R2,000",
@@ -158,19 +166,46 @@ const notificationPreferenceOptions = [
   "WhatsApp",
   "App Push Notifications",
 ];
-
+const deals = [
+  "Discounts & vouchers",
+  "Combo deals (e.g. Meal + Spa)",
+  "Flash sales / limited time offers.",
+  "Buy one, get one free.",
+  "Cashback or store credit",
+  "Free gifts with purchase",
+  "First access to new products",
+  "Loyalty stamp rewards",
+  "Bulk-buy discounts.",
+]
+const giveaways = [
+  "Cash prizes",
+  "Vouchers / Store Credit",
+  "Tech (Phones, Laptops, Gadgets)",
+  "Fashion / Brand Merch",
+  "Restaurant or Spa Experiences",
+  "Shopping Sprees",
+  "House or Rent for a Year",
+  "Groceries for a Month",
+  "Flights or Travel Packages",
+  "School Fees or Education Support",
+  "Car or Transport Vouchers",
+  "Business Startup Kits",
+]
 type SignUpForm = z.infer<typeof formSchema>;
 
 const UserOnBoard = () => {
-  const [rotate, setRotate] = useState(false);
+  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const navigate = useNavigate();
+  const [, setRotate] = useState(false);
   const [step, setStep] = useState<number>(1);
   const [stepQuestion, setStepQuestion] = useState<number>(1);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [selectedCountry, setSelectedCountry] = useState<string>("+27");
-
+  const [isLoading, setLoading] = useState<boolean>(false);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const containerRefs = Array(11).fill(0).map(() => useRef<HTMLDivElement>(null));
-
+  const dispatch = useDispatch();
   const {
     register,
     handleSubmit,
@@ -197,75 +232,6 @@ const UserOnBoard = () => {
   const formData = watch();
   const selectedProvince = watch("province");
   const cityOptions = selectedProvince && provinceCities[selectedProvince] ? provinceCities[selectedProvince] : [];
-
-  const handleNext = async () => {
-    setRotate(true);
-    if (step === 1) {
-      const valid = await trigger([
-        "name",
-        "email",
-        "phone",
-        "password",
-        "confirmPassword",
-      ]);
-      if (valid) setStep(2);
-    } else if (step === 2) {
-      const valid = await trigger([
-        "streetAddress",
-        "province",
-        "city",
-        "postalCode",
-      ]);
-      if (valid) setStep(3);
-    } else if (step === 3) {
-      setStep(4);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (step > 1) setStep(step - 1);
-  };
-
-  const handleStepClick = async (stepNumber: number) => {
-    if (stepNumber < step) {
-      setStep(stepNumber);
-    } else if (stepNumber > step) {
-      if (step === 1) {
-        const valid = await trigger([
-          "name",
-          "email",
-          "phone",
-          "password",
-          "confirmPassword",
-        ]);
-        if (valid) setStep(stepNumber);
-      } else if (step === 2) {
-        const valid = await trigger([
-          "streetAddress",
-          "province",
-          "city",
-          "postalCode",
-        ]);
-        if (valid) setStep(stepNumber);
-      }
-    }
-    if (stepNumber === 3) {
-      setStep(stepNumber);
-      setStepQuestion(1);
-    }
-  };
-
-  const preferenceNext = () => {
-    if (stepQuestion < 7) {
-      setStepQuestion((s: number) => s + 1);
-    } else {
-      setStep((s) => s + 1);
-    }
-  };
-
-  const onSubmit = (data: SignUpForm) => {
-    console.log("Form submitted:", data);
-  };
 
   useEffect(() => {
     gsap.to(`#step-${step}`, {
@@ -296,12 +262,144 @@ const UserOnBoard = () => {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, stepQuestion]);
+
+  const handleNext = async () => {
+    setRotate(true);
+    if (step === 1) {
+      const valid = await trigger([
+        "name",
+        "email",
+        "phone",
+        "password",
+        "confirmPassword",
+      ]);
+      if (valid) setStep(2);
+    } else if (step === 2) {
+      const valid = await trigger([
+        "street",
+        "province",
+        "city",
+        "postalCode",
+      ]);
+      if (valid) setStep(3);
+    } else if (step === 3) {
+      setStep(4);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (step > 1) setStep(step - 1);
+  };
+
+  const handleStepClick = async (stepNumber: number) => {
+    if (stepNumber < step) {
+      setStep(stepNumber);
+      return;
+    }
+
+    let isValid = false;
+
+    if (step === 1) {
+      isValid = await trigger([
+        "name",
+        "email",
+        "phone",
+        "password",
+        "confirmPassword",
+      ]);
+    } else if (step === 2) {
+      isValid = await trigger([
+        "street",
+        "province",
+        "city",
+        "postalCode",
+      ]);
+    }
+
+    if (isValid || stepNumber < step) {
+      setStep(stepNumber);
+      if (stepNumber === 3) {
+        setStepQuestion(1); // Reset to first preference question
+      }
+    }
+  };
+
+
+  const preferenceNext = () => {
+    if (stepQuestion < 7) {
+      setStepQuestion((s: number) => s + 1);
+    } else {
+      setStep((s) => s + 1);
+    }
+  };
+
+  const onSubmit = async (data: SignUpForm) => {
+   
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({
+          message: "Network response was not ok"
+        }));
+
+        throw new Error(
+          result.message ||
+          `Signup failed with status ${response.status}` ||
+          "Signup failed. Please try again."
+        );
+      }
+
+      const result = await response.json();
+      console.log("Response : ", result);
+      toast.success('Signup successful!');
+      dispatch(login(result?.user?.role));
+      localStorage.setItem("frontendToken", result?.frontendToken);   
+      const userId = result?.user?.id;
+      if (userId) {
+        setTimeout(() => {
+          navigate(`/user/${userId}`);
+        }, 2000);
+      }
+
+    } catch (error: any) {
+      console.error("Signup error:", error.message);
+
+      // Handle different error types
+      let errorMessage = "Signup failed. Please try again.";
+
+      if (error.name === "TypeError" && error.message.includes("Failed to fetch")) {
+        errorMessage = "Network error - Please check your internet connection";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
 
   return (
     <main className="w-full  flex h-full flex-col items-center relative">
       <img src="/images/grad.avif" alt="" className="absolute top-0 right-0 rotate-180" />
       <nav className="w-[90%] p-3 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+
         <div className="flex items-center justify-between w-full sm:w-auto">
           <img
             src="/images/Logo.png"
@@ -352,6 +450,7 @@ const UserOnBoard = () => {
       </nav>
 
       <div ref={containerRefs[0]} className="h-full w-[90%]  flex items-center justify-center z-20 ">
+
         <div
           className={`w-[30%]   h-full  md:h-[90%] px-10   sm:px-10 py-1 rounded-sm  ${step === 3
             ? "bg-transparent shadow-none w-full h-fit "
@@ -361,6 +460,7 @@ const UserOnBoard = () => {
 
           {step < 3 && (
             <div className="flex flex-col items-center justify-center p-4">
+
               <div className="bg-[#1c1c1c] shadow-[0_0_10px_2px_rgba(255,255,255,0.6)] rounded-lg p-2">
                 <img src="/images/wheel.png" alt="" className="object-contain w-full max-w-[200px] mx-auto" />
               </div>
@@ -490,14 +590,14 @@ const UserOnBoard = () => {
                 <div ref={containerRefs[2]} className="space-y-4 sm:space-y-6">
                   <div className="relative w-full">
                     <input
-                      {...register("streetAddress")}
-                      defaultValue={formData.streetAddress || ""}
+                      {...register("street")}
+                      defaultValue={formData.street || ""}
                       placeholder="Street Address (e.g., 123 Main St)"
                       className="w-full bg-[#0d0d0d] text-white px-3 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#dda87c] placeholder-gray-400"
                     />
-                    {errors.streetAddress && (
+                    {errors.street && (
                       <p className="absolute text-red-500 text-sm mt-1">
-                        {errors.streetAddress.message}
+                        {errors.street.message}
                       </p>
                     )}
                   </div>
@@ -545,6 +645,20 @@ const UserOnBoard = () => {
 
                   <div className="relative w-full">
                     <input
+                      {...register("town")}
+                      defaultValue={formData.town || ""}
+                      placeholder="Town"
+                      className="w-full bg-[#0d0d0d] text-white px-3 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#dda87c] placeholder-gray-400"
+                    />
+                    {errors.town && (
+                      <p className="absolute text-red-500 text-sm mt-1">
+                        {errors.town.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="relative w-full">
+                    <input
                       {...register("postalCode")}
                       defaultValue={formData.postalCode || ""}
                       placeholder="Postal Code"
@@ -558,6 +672,7 @@ const UserOnBoard = () => {
                   </div>
                 </div>
               )}
+
 
               {step === 3 && (
                 <>
@@ -579,7 +694,7 @@ const UserOnBoard = () => {
                             className="hidden peer"
                           />
                           <span
-                            className="bg-black border-2 border-[#725a46] p-3 sm:p-4 rounded-md text-lg sm:text-2xl w-full sm:w-90 text-center transition-all duration-500 
+                            className="bg-black border-2 border-[#725a46] p-3 sm:p-4 rounded-md text-lg sm:text-2xl w-full sm:w-90 text-center 
                             text-[#725a46] peer-checked:bg-[#dda87c] peer-checked:text-black hover:bg-[#523d2b] hover:text-black"
                           >
                             {range}
@@ -636,9 +751,9 @@ const UserOnBoard = () => {
                       </div>
 
                       {/* Improved scrollable container */}
-                      <div className="max-h-[60vh] overflow-y-auto pb-4"> {/* Added max height and overflow */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 px-2">
-                          {interests.map((i) => {
+                      <div className="max-h-[60vh] overflow-y-auto pb-4">
+                        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 px-2">
+                          {interests.map((i: any) => {
                             const currentInterests: any = getValues("interests") || [];
                             const isChecked = currentInterests.includes(i);
                             const isDisabled = currentInterests.length >= 7 && !isChecked;
@@ -647,7 +762,7 @@ const UserOnBoard = () => {
                               <label
                                 key={i}
                                 className={`flex items-center justify-center cursor-pointer
-                ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                               >
                                 <input
                                   type="checkbox"
@@ -673,12 +788,11 @@ const UserOnBoard = () => {
                                   className="hidden peer"
                                   disabled={isDisabled}
                                 />
-                                {/* More compact mobile layout */}
                                 <span
-                                  className={`border-2 border-[#725a46] p-2 sm:p-3 rounded-md text-base sm:text-lg md:text-xl w-full text-center 
-                  transition-all duration-300 
-                  ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#725a46]"}
-                  ${!isDisabled ? "hover:bg-[#523d2b] hover:text-black" : ""}`}
+                                  className={`border-2 border-[#dfae82] p-1 sm:p-2 rounded-md text-base sm:text-lg md:text-xl w-fit text-center 
+              transition-all duration-300 
+              ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#dfae82]"}
+              ${!isDisabled ? "hover:bg-[#dfae82] hover:text-black" : ""}`}
                                 >
                                   {i}
                                 </span>
@@ -687,6 +801,7 @@ const UserOnBoard = () => {
                           })}
                         </div>
                       </div>
+
                     </div>
                   )}
 
@@ -707,18 +822,9 @@ const UserOnBoard = () => {
                         Selected: {(getValues("dealPreferences")?.length || 0)}/6
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
-                        {[
-                          "Discounts & vouchers",
-                          "Combo deals (e.g. Meal + Spa)",
-                          "Flash sales / limited time offers.",
-                          "Buy one, get one free.",
-                          "Cashback or store credit",
-                          "Free gifts with purchase",
-                          "First access to new products",
-                          "Loyalty stamp rewards",
-                          "Bulk-buy discounts.",
-                        ].map((deal) => {
+                      {/* Replace grid with flex-wrap for responsive wrapping */}
+                      <div className="flex flex-wrap items-between justify-center gap-2 sm:gap-4 px-2">
+                        {deals.map((deal) => {
                           const current: any = getValues("dealPreferences") || [];
                           const isChecked = current.includes(deal);
                           const isDisabled = current.length >= 6 && !isChecked;
@@ -726,8 +832,8 @@ const UserOnBoard = () => {
                           return (
                             <label
                               key={deal}
-                              className={`flex items-center justify-center space-x-3 cursor-pointer
-                              ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                              className={`flex items-center justify-center cursor-pointer
+            ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
                               <input
                                 type="checkbox"
@@ -754,10 +860,10 @@ const UserOnBoard = () => {
                                 disabled={isDisabled}
                               />
                               <span
-                                className={`border-2 border-[#725a46] p-2 sm:p-4 rounded-md text-lg sm:text-2xl w-full text-center 
-                                transition-all duration-300 
-                                ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#725a46]"}
-                                ${!isDisabled ? "hover:bg-[#523d2b] hover:text-black" : ""}`}
+                                className={`border-2 border-[#dfae82] p-2 sm:p-2 rounded-md text-base sm:text-lg md:text-xl w-fit text-center 
+              transition-all duration-300 
+              ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#dfae82]"}
+              ${!isDisabled ? "hover:bg-[#dfae82] hover:text-black" : ""}`}
                               >
                                 {deal}
                               </span>
@@ -768,12 +874,14 @@ const UserOnBoard = () => {
                     </div>
                   )}
 
+
                   {stepQuestion === 5 && (
                     <div ref={containerRefs[7]} className="space-y-2">
                       <label className="block font-medium text-white text-2xl sm:text-4xl mb-1 text-center">
                         What would you <span className="text-[#dda87c]">love to win</span> in a <span className="text-[#dda87c]">raffle or<br className="hidden sm:block" /> giveaway?</span>
                       </label>
                       <p className="text-center text-sm">Select all that apply (Max 6)</p>
+
                       {errors.giveawayPreferences && (
                         <p className="text-red-500 text-lg text-center mb-4">
                           {errors.giveawayPreferences.message}
@@ -784,23 +892,10 @@ const UserOnBoard = () => {
                         Selected: {(getValues("giveawayPreferences")?.length || 0)}/6
                       </div>
 
-                      {/* Scrollable container for options */}
+                      {/* Scrollable and wrapping layout */}
                       <div className="max-h-[60vh] overflow-y-auto pb-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 px-2">
-                          {[
-                            "Cash prizes",
-                            "Vouchers / Store Credit",
-                            "Tech (Phones, Laptops, Gadgets)",
-                            "Fashion / Brand Merch",
-                            "Restaurant or Spa Experiences",
-                            "Shopping Sprees",
-                            "House or Rent for a Year",
-                            "Groceries for a Month",
-                            "Flights or Travel Packages",
-                            "School Fees or Education Support",
-                            "Car or Transport Vouchers",
-                            "Business Startup Kits",
-                          ].map((item) => {
+                        <div className="flex flex-wrap items-between justify-center gap-2 sm:gap-4 px-2">
+                          {giveaways.map((item) => {
                             const selected: any = getValues("giveawayPreferences") || [];
                             const isChecked: any = selected.includes(item);
                             const isDisabled = selected.length >= 6 && !isChecked;
@@ -809,7 +904,7 @@ const UserOnBoard = () => {
                               <label
                                 key={item}
                                 className={`flex items-center justify-center cursor-pointer
-                ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                               >
                                 <input
                                   type="checkbox"
@@ -836,10 +931,10 @@ const UserOnBoard = () => {
                                   disabled={isDisabled}
                                 />
                                 <span
-                                  className={`border-2 border-[#725a46] p-2 sm:p-3 rounded-md text-base sm:text-lg md:text-xl w-full text-center 
-                  transition-all duration-300 
-                  ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#725a46]"}
-                  ${!isDisabled ? "hover:bg-[#523d2b] hover:text-black" : ""}`}
+                                  className={`border-2 border-[#dfae82] p-2 sm:p-2 rounded-md text-base sm:text-lg md:text-xl w-fit text-center 
+                transition-all duration-300 
+                ${isChecked ? "bg-[#dda87c] text-black" : "bg-black text-[#dfae82]"}
+                ${!isDisabled ? "hover:bg-[#dfae82] hover:text-black" : ""}`}
                                 >
                                   {item}
                                 </span>
@@ -850,6 +945,7 @@ const UserOnBoard = () => {
                       </div>
                     </div>
                   )}
+
 
                   {stepQuestion === 6 && (
                     <div ref={containerRefs[8]} className="space-y-2">
@@ -913,11 +1009,21 @@ const UserOnBoard = () => {
                 <button
                   type="button"
                   onClick={step === 3 ? preferenceNext : handleNext}
-                  className={`${step >= 3 ? "w-full sm:w-90" : "w-full"} bg-[#523d2b] hover:bg-[#c78a63] text-white px-6 py-2 rounded-lg shadow cursor-pointer`}
+                  className={`${step >= 3 ? "w-full sm:w-90" : "w-full"} bg-[#523d2b] hover:bg-[#c78a63] text-white px-6 py-2 rounded-lg shadow cursor-pointer `}
                 >
                   {step === 3 && stepQuestion < 7 ? "Next Question" : step === 3 ? "Continue to Payment" : "Continue"}
                 </button>
-
+                <div className="w-full sm:w-auto mt-8 flex justify-start">
+                  {step > 1 && (
+                    <button
+                      onClick={handlePrevious}
+                      className="flex items-center gap-2 text-[#dda87c] border border-[#dda87c] px-3 py-1 rounded-md text-sm sm:text-base hover:bg-[#dda87c]/10 transition-colors"
+                    >
+                      <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                      Go Back
+                    </button>
+                  )}
+                </div>
                 {step === 3 && (
                   <button
                     type="button"
@@ -937,10 +1043,17 @@ const UserOnBoard = () => {
 
                 <button
                   type="submit"
-                  className="w-full sm:w-90 bg-[#523d2b] hover:bg-[#c78a63] text-white px-6 py-2 rounded-lg shadow cursor-pointer"
+                  disabled={isLoading}
+                  className={`w-full sm:w-90 px-6 py-2 rounded-lg shadow transition-all duration-300
+    ${isLoading
+                      ? "bg-[#b08b6c] text-white opacity-70 cursor-not-allowed"
+                      : "bg-[#523d2b] hover:bg-[#c78a63] text-white cursor-pointer"
+                    }`}
                 >
-                  Complete Registration
+                  {isLoading ? "Registering..." : "Complete Registration"}
                 </button>
+
+
               </div>
             </form>
           )}

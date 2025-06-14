@@ -236,7 +236,7 @@ const AffiliateOnBoard = () => {
             setStep(stepNumber);
         } else if (stepNumber > step) {
             if (step === 1) {
-                const valid = await trigger(["fullname", "surname", "email", "phone"]);
+                const valid = await trigger(["name", "surname", "email", "phone"]);
                 if (valid) setStep(stepNumber);
             } else if (step === 2) {
                 const fields = ["affiliateType", "bankName", "accountHolder", "accountNumber", "branchCode"];
