@@ -12,6 +12,7 @@ import { User, Mail, Lock, Phone, EyeOff, Eye, ArrowLeft } from "lucide-react";
 
 import Star from "@/components/custom_components/Star";
 import { login } from "@/store/authSlice";
+import axios from "axios";
 
 const countries = [
   { code: "+27", name: "SA" },
@@ -336,62 +337,44 @@ const UserOnBoard = () => {
   };
 
   const onSubmit = async (data: SignUpForm) => {
-   
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/auth/signup`, {
-        method: "POST",
+
+      const response = await axios.post(`${API_URL}/auth/signup`, data, {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
-        credentials: "include",
+        withCredentials: true
       });
 
+      const result = response.data;
+      console.log("Signup Response:", result);
 
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({
-          message: "Network response was not ok"
-        }));
+      toast.success("Signup successful!");
 
-        throw new Error(
-          result.message ||
-          `Signup failed with status ${response.status}` ||
-          "Signup failed. Please try again."
-        );
-      }
-
-      const result = await response.json();
-      console.log("Response : ", result);
-      toast.success('Signup successful!');
       dispatch(login(result?.user?.role));
-      localStorage.setItem("frontendToken", result?.frontendToken);   
-      const userId = result?.user?.id;
-      if (userId) {
-        setTimeout(() => {
-          navigate(`/user/${userId}`);
-        }, 2000);
-      }
-
+      localStorage.setItem("frontendToken", result?.frontendToken);
+      navigate(`/user/${result?.user?.id}`);
     } catch (error: any) {
       console.error("Signup error:", error.message);
 
-      // Handle different error types
       let errorMessage = "Signup failed. Please try again.";
 
-      if (error.name === "TypeError" && error.message.includes("Failed to fetch")) {
+      if (error.name === "AxiosError" && error.message.includes("Network Error")) {
         errorMessage = "Network error - Please check your internet connection";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
 
       toast.error(errorMessage);
-
     } finally {
       setLoading(false);
     }
   };
+
 
 
 

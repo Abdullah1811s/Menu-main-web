@@ -79,6 +79,7 @@ const NavBar = () => {
     };
 
     const handleDashboardClick = () => {
+        console.log("clicked" , role)
         try {
             switch (role) {
                 case 'user':
@@ -91,6 +92,7 @@ const NavBar = () => {
                     break;
 
                 case 'affiliate':
+                    console.log("this is the case");
                     if (frontendToken) {
                         const decoded: TokenPayload = jwtDecode(frontendToken);
                         if (decoded?.id) {

@@ -12,6 +12,7 @@ const CustomButton: React.FC<DecoratedButtonProps> = ({
     label,
     onClick,
     className = "",
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     shouldRotate = true,
     ...rest
 }) => {

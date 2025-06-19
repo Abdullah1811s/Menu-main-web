@@ -10,7 +10,9 @@ import wheelRoutes from './routes/wheelRoute.js'
 import vendorRoutes from './routes/vendorroute.js'
 import memberShipRoute from './routes/membershipRoute.js'
 import uploadRoute from './routes/cloudinaryRoute.js'
+import paymentRoute from './routes/paymentRoutes.js'
 const app = express();
+app.use(express.json());
 app.use(cookieParser());
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const PORT = process.env.PORT || 4000;
@@ -20,17 +22,16 @@ app.use(cors({
     credentials: true
 }));
 
-app.use(express.json());
 connectDB();
 
-app.use('/api/auth', authRoutes);   
+app.use('/api/auth', authRoutes);
 app.use('/api/affiliate', affiliateRoutes);
-app.use('/api/vendor' , vendorRoutes);
-app.use('/api/wheel' , wheelRoutes);
-app.use('/api/membership' , memberShipRoute);
-app.use('/api/membership' , memberShipRoute);
-app.use('/api/generateSignature' , uploadRoute);
-
+app.use('/api/vendor', vendorRoutes);
+app.use('/api/wheel', wheelRoutes);
+app.use('/api/membership', memberShipRoute);
+app.use('/api/membership', memberShipRoute);
+app.use('/api/generateSignature', uploadRoute);
+app.use('/api/create-checkout', paymentRoute);
 
 
 app.listen(PORT, () => {

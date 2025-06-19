@@ -176,7 +176,7 @@ export const signup = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Signup error:", error);
+        console.log("Signup error:", error);
         res.status(500).json({ message: "Internal server error. Please try again later." });
     }
 };

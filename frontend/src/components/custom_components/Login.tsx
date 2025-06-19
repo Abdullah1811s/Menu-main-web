@@ -66,8 +66,8 @@ export default function LoginForm() {
 
             switch (userType) {
                 case "user":
-                    response = await axios.post(`${API_URL}/auth/login`, credentials , {
-                        withCredentials:true
+                    response = await axios.post(`${API_URL}/auth/login`, credentials, {
+                        withCredentials: true
                     });
                     localStorage.setItem("frontendToken", response?.data?.frontendToken);
                     dispatch(login(response?.data?.user?.role));
@@ -75,24 +75,37 @@ export default function LoginForm() {
                     // setTimeout(() => {
                     //     navigate(`/user/${response?.data?.user.id}`);
                     // }, 900);
-                    
                     break;
+
                 case "partner":
                     response = await axios.post(`${API_URL}/partner/login`, credentials);
                     break;
+
                 case "affiliate":
-                    response = await axios.post(`${API_URL}/affiliate/login`, credentials);
+                    response = await axios.post(`${API_URL}/affiliate/login`, credentials, {
+                        withCredentials: true
+                    });
+                    localStorage.setItem("frontendToken", response?.data?.frontendToken);
+                    dispatch(login(response?.data?.user?.role));
+                    console.log(response?.data);
+                    setTimeout(() => {
+                        navigate(`/affiliate/${response?.data?.user.id}`);
+                    }, 900);
                     break;
+
                 default:
                     throw new Error("Invalid user type");
             }
 
             toast.success(response?.data?.message);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            console.error("Login error:", error?.response?.data || error.message);
-            // Optionally show toast here
+            console.error("Login error:", error?.response?.data);
+            toast.error(
+                error?.response?.data?.message ||
+                "An unexpected error occurred during login. Please try again."
+            );
         } finally {
             setIsLoading(false);
         }

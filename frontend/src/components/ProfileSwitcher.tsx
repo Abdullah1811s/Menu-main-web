@@ -40,8 +40,8 @@ const ProfileSwitcher = () => {
     return (
         <div className="flex gap-2 items-center justify-center">
             <img src="/images/p1.png" alt="" className="h-8 w-8 rounded-full" />
-            <h1 className="text-2xl font-medium text-white">
-                {decoded?.name || "Name"}
+            <h1 className="text-2xl ml-2 mr-2 font-medium text-white">
+                {decoded?.name || "John Dee"}
             </h1>
 
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

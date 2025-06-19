@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
 
         resetPasswordToken: { type: String },
         resetPasswordExpire: { type: Date },
-        referralCodeShare: { type: String },
+        referralCode: { type: String },
 
 
         incomeRange: {
@@ -140,6 +140,22 @@ userSchema.virtual("memberships", {
     localField: "_id",
     foreignField: "userId",
 });
+userSchema.virtual("referralsGiven", {
+    ref: "referralModel",
+    localField: "_id",
+    foreignField: "referrer",
+    justOne: false,
+    options: { match: { referrerModel: "User" } }
+});
+
+userSchema.virtual("referralsReceived", {
+    ref: "referralModel",
+    localField: "_id",
+    foreignField: "referred",
+    justOne: false,
+    options: { match: { referredModel: "User" } }
+});
+
 userSchema.methods.comparePassword = function (password) {
     return bcrypt.compare(password, this.password);
 };

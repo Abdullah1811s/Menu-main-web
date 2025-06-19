@@ -1,10 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/rules-of-hooks */
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useRef, useState } from "react";
-import { User, Mail, Lock, Phone, EyeOff, Eye, ChevronLeft, Globe, CreditCard, Banknote, MapPin, FileText, Briefcase, Hash, Upload } from "lucide-react";
+import { User, Mail, Lock, Phone, EyeOff, Eye, Globe, CreditCard, Banknote, MapPin, FileText, Briefcase, Hash, Upload, Trash2, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import gsap from "gsap";
 import Star from "@/components/custom_components/Star";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const countries = [
     { code: "+27", name: "SA" },
@@ -45,6 +50,7 @@ const audienceReach = [
     "50,001 – 100,000",
     "Over 100,000"
 ];
+
 const brandAffiliationOptions = [
     "Yes",
     "No",
@@ -106,75 +112,116 @@ const AffiliateSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     surname: z.string().min(2, "Surname must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    phone: z.string().min(10, "Phone number must be at least 10 digits").max(15, "Phone number cannot exceed 15 digits"),
-    countryCode: z.string(),
+    phone: z.string()
+        .min(10, "Phone number must be at least 10 digits")
+        .max(15, "Phone number cannot exceed 15 digits"),
+    countryCode: z.string().optional(),
 
-    // Business Information
-    affiliateType: z.enum(["individual", "business"]),
-    businessName: z.string().optional(),
+    // Business Information - All made optional
+    affiliateType: z.enum(["individual", "business"], {
+        required_error: "Please select affiliate type"
+    }),
+    businessName: z.string()
+
+        .optional(),
+    tradingAddress: z.string()
+
+        .optional(),
+    province: z.string()
+
+        .optional(),
+    city: z.string()
+
+        .optional(),
     companyRegistrationNumber: z.string().optional(),
     vatNumber: z.string().optional(),
-    tradingAddress: z.string().optional(),
-    province: z.string().optional(),
-    city: z.string().optional(),
     businessContactNumber: z.string().optional(),
-    businessEmail: z.string().email("Invalid business email").optional(),
+    businessEmail: z.union([
+        z.string().email("Invalid business email"),
+        z.literal(""),
+        z.undefined()
+    ]).optional(),
+
 
     // Banking Information
     bankName: z.string().min(2, "Bank name must be at least 2 characters"),
     accountHolder: z.string().min(2, "Account holder name must be at least 2 characters"),
-    accountNumber: z.string().min(5, "Account number must be at least 5 digits").max(20, "Account number cannot exceed 20 digits"),
-    branchCode: z.string().min(4, "Branch code must be at least 4 digits").max(10, "Branch code cannot exceed 10 digits"),
+    accountNumber: z.string()
+        .min(5, "Account number must be at least 5 digits")
+        .max(20, "Account number cannot exceed 20 digits"),
+    branchCode: z.string()
+        .min(4, "Branch code must be at least 4 digits")
+        .max(10, "Branch code cannot exceed 10 digits"),
 
     // Password
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm Password must be at least 6 characters"),
-    idNumber: z
-        .string()
-        .optional(),
-    // Affiliate Questions
-    promotionPlatforms: z.array(z.string()).min(1, "Select at least one platform"),
-    audienceReach: z.string().min(1, "Select your audience reach"),
-    brandAffiliationOptions: z.string().optional().nullable(),
-    contentTypes: z.array(z.string()).max(5, "Maximum 5 content types allowed"),
-    affiliateGoals: z.array(z.string()).max(5, "Maximum 5 goals allowed"),
-    existingAffiliation: z.string().min(1, "Select an option"),
-    preferredBrands: z.array(z.string()).max(5, "Maximum 5 brand types allowed"),
-    sharingFrequency: z.string().min(1, "Select your sharing frequency"),
-    openToFeatures: z.string().min(1, "Select an option"),
-    campaignFrequency: z.string().optional(),
-    featuredOptions: z.string().optional(),
-    bankStatement: z.instanceof(File)
-        .refine(file => file.size <= 5 * 1024 * 1024, "File size must be less than 5MB")
-        .refine(
-            file => ['application/pdf', 'image/png', 'image/jpeg'].includes(file.type),
-            "Only PDF, PNG, and JPG files are accepted"
-        ),
-    // Terms
-    agreedToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the terms" }) }),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
-}).refine((data) => {
-    if (data.affiliateType === "business") {
-        return data.businessName && data.tradingAddress && data.province && data.city;
-    }
-    return true;
-}, {
-    message: "Business details are required for business affiliates",
-    path: ["businessName"],
-});
+    idNumber: z.string().optional(),
 
+    // Marketing Information - All optional
+    promotionPlatforms: z.array(z.string()).max(7).optional().nullable(),
+    audienceReach: z.string().optional().nullable(),
+    brandAffiliationOptions: z.string().optional().nullable(),
+    contentTypes: z.array(z.string()).max(5, "Maximum 5 content types allowed").optional().nullable(),
+    affiliateGoals: z.array(z.string()).max(5, "Maximum 5 goals allowed").optional().nullable(),
+    existingAffiliation: z.string().optional().nullable(),
+    preferredBrands: z.array(z.string()).max(5, "Maximum 5 brand types allowed").optional().nullable(),
+    sharingFrequency: z.string().optional().nullable(),
+    openToFeatures: z.string().optional().nullable(),
+    campaignFrequency: z.string().optional().nullable(),
+    featuredOptions: z.string().optional().nullable(),
+    brandTypes: z.array(z.string()).max(5, "Maximum 5 allowed").optional().nullable(),
+
+
+    // Terms
+    agreedToTerms: z.literal(true, {
+        errorMap: () => ({ message: "You must agree to the terms" })
+    }),
+
+    // Bank Statement
+    bankStatement: z
+        .any()
+        .optional()
+        .nullish()
+        .transform(val => {
+            if (!val) return null;
+            if (val instanceof File) {
+                if (val.size > 5 * 1024 * 1024) return null; // Silently ignore if too large
+                if (!['application/pdf', 'image/png', 'image/jpeg'].includes(val.type)) return null; // Silently ignore if wrong type
+                return val;
+            }
+            return null;
+        }),
+})
+    .refine(data => data.password === data.confirmPassword, {
+        message: "Passwords must match",
+        path: ["confirmPassword"],
+    })
+    .refine(data => {
+        // Only require business fields if affiliate type is "business"
+        if (data.affiliateType === "business") {
+            return data.businessName &&
+                data.tradingAddress &&
+                data.province &&
+                data.city;
+        }
+        return true;
+    }, {
+        message: "Business details are required for business affiliates",
+        path: ["businessName"],
+    });
 type AffiliateForm = z.infer<typeof AffiliateSchema>;
 
 const AffiliateOnBoard = () => {
-    const [rotate, setRotate] = useState(false);
+    const API_URL = import.meta.env.VITE_API_BASE_URL;
+    const [, setRotate] = useState(false);
     const [step, setStep] = useState<number>(1);
     const [stepQuestion, setStepQuestion] = useState<number>(1);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
     const [selectedCountry, setSelectedCountry] = useState<string>("+27");
-    const [selectedProvince, setSelectedProvince] = useState<string>("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    // const [selectedProvince, setSelectedProvince] = useState<string>("");
     const containerRefs = Array(11).fill(0).map(() => useRef<HTMLDivElement>(null));
 
     const {
@@ -182,8 +229,8 @@ const AffiliateOnBoard = () => {
         handleSubmit,
         trigger,
         getValues,
-        setError,
-        clearErrors,
+        // setError,
+        // clearErrors,
         setValue,
         watch,
         formState: { errors },
@@ -191,64 +238,151 @@ const AffiliateOnBoard = () => {
         resolver: zodResolver(AffiliateSchema),
         defaultValues: {
             promotionPlatforms: [],
+            audienceReach: null,
+            brandAffiliationOptions: null,
             contentTypes: [],
             affiliateGoals: [],
+            existingAffiliation: null,
+            bankStatement: null,
             preferredBrands: [],
+            sharingFrequency: null,
+            openToFeatures: null,
+            campaignFrequency: null,
+            featuredOptions: null,
+            brandTypes: [],
         },
     });
 
     const formData = watch();
-    const affiliateType = watch("affiliateType");
-    const cityOptions = selectedProvince ?
-        provinces.find(p => p.name === selectedProvince)?.cities || []
-        : [];
-
+    // const affiliateType = watch("affiliateType");
+    // const cityOptions = selectedProvince ?
+    //     provinces.find(p => p.name === selectedProvince)?.cities || []
+    //     : [];
     const handleNext = async () => {
         setRotate(true);
-        setStep((s) => s + 1);
-        // if (step === 1) {
-        //     const valid = await trigger([
-        //         "fullname",
-        //         "surname",
-        //         "email",
-        //         "phone",
-        //     ]);
-        //     if (valid) setStep(2);
-        // } else if (step === 2) {
-        //     const fields = ["affiliateType", "bankName", "accountHolder", "accountNumber", "branchCode"];
-        //     if (affiliateType === "business") {
-        //         fields.push("businessName", "tradingAddress", "province", "city");
-        //     }
-        //     const valid = await trigger(fields);
-        //     if (valid) setStep(3);
-        // } else if (step === 3) {
-        //     const valid = await trigger(["password", "confirmPassword"]);
-        //     if (valid) setStep(4);
-        // }
+
+        try {
+            if (step === 1) {
+                // Validate personal information
+                const valid = await trigger([
+                    "name",
+                    "surname",
+                    "email",
+                    "phone"
+                ]);
+                if (valid) setStep(2);
+            }
+            else if (step === 2) {
+                // First validate that affiliateType is selected
+                const typeValid = await trigger(["affiliateType"]);
+                if (!typeValid) return;
+
+                // Get current form values
+                const formValues = getValues();
+
+                if (formValues.affiliateType === "business") {
+                    // Clear idNumber for business type
+                    setValue("idNumber", "");
+
+                    // Validate business fields if type is business
+                    const businessValid = await trigger([
+                        "businessName",
+                        "tradingAddress",
+                        "province",
+                        "city"
+                    ]);
+                    if (businessValid) setStep(3);
+                } else {
+                    setValue("businessName", "");
+                    setValue("tradingAddress", "");
+                    setValue("province", "");
+                    setValue("city", "");
+                    setValue("companyRegistrationNumber", "");
+                    setValue("vatNumber", "");
+                    setValue("businessContactNumber", "");
+                    setValue("businessEmail", "");
+
+                    const individualValid = await trigger(["idNumber"]);
+
+                    if (individualValid) setStep(3);
+                }
+            }
+            else if (step === 3) {
+                // Validate banking information
+                const valid = await trigger([
+                    "bankName",
+                    "accountHolder",
+                    "branchCode"
+                    // accountNumber is not required in step 3 per requirements
+                ]);
+                if (valid) setStep(4);
+            }
+        } catch (error) {
+            console.error("Validation error:", error);
+        }
     };
 
-    const handlePrevious = () => {
-        if (step > 1) setStep(step - 1);
-    };
+    // const handlePrevious = () => {
+    //     if (step > 1) setStep(step - 1);
+    // };
 
     const handleStepClick = async (stepNumber: number) => {
-        if (stepNumber < step) {
-            setStep(stepNumber);
-        } else if (stepNumber > step) {
-            if (step === 1) {
-                const valid = await trigger(["name", "surname", "email", "phone"]);
-                if (valid) setStep(stepNumber);
-            } else if (step === 2) {
-                const fields = ["affiliateType", "bankName", "accountHolder", "accountNumber", "branchCode"];
-                if (affiliateType === "business") {
-                    fields.push("businessName", "tradingAddress", "province", "city");
+        try {
+            if (stepNumber < step) {
+                // Always allow going back to previous steps
+                setStep(stepNumber);
+            } else if (stepNumber > step) {
+                // Validate current step before proceeding forward
+                if (step === 1) {
+                    // Validate personal information
+                    const valid = await trigger(["name", "surname", "email", "phone"]);
+                    if (valid) setStep(stepNumber);
                 }
-                const valid = await trigger(fields);
-                if (valid) setStep(stepNumber);
-            } else if (step === 3) {
-                const valid = await trigger(["password", "confirmPassword"]);
-                if (valid) setStep(stepNumber);
+                else if (step === 2) {
+                    // First validate that affiliateType is selected
+                    const typeValid = await trigger(["affiliateType"]);
+                    if (!typeValid) return;
+
+                    // Get current form values
+                    const formValues = getValues();
+
+                    if (formValues.affiliateType === "business") {
+                        // Validate business fields if type is business
+                        const businessValid = await trigger([
+                            "businessName",
+                            "tradingAddress",
+                            "province",
+                            "city"
+                        ]);
+                        if (businessValid) setStep(stepNumber);
+                    } else {
+                        // Validate individual field
+                        setValue("businessName", "");
+                        setValue("tradingAddress", "");
+                        setValue("province", "");
+                        setValue("city", "");
+                        setValue("companyRegistrationNumber", "");
+                        setValue("vatNumber", "");
+                        setValue("businessContactNumber", "");
+                        setValue("businessEmail", "");
+
+                        const individualValid = await trigger(["idNumber"]);
+
+                        if (individualValid) setStep(3);
+                    }
+                }
+                else if (step === 3) {
+                    // Validate banking information
+                    const valid = await trigger([
+                        "bankName",
+                        "accountHolder",
+                        "branchCode"
+                    ]);
+                    if (valid) setStep(stepNumber);
+                }
             }
+        } catch (error) {
+            console.error("Validation error:", error);
         }
     };
 
@@ -260,9 +394,49 @@ const AffiliateOnBoard = () => {
         }
     };
 
-    const onSubmit = (data: AffiliateForm) => {
-        console.log('Form Values:', data);
-        console.log('Form Errors:', errors);
+    const onSubmit = async (data: AffiliateForm) => {
+        console.log("The form is being submitted");
+        console.log("the data is ", data);
+        setIsSubmitting(true);
+        try {
+            const response = await axios.post(`${API_URL}/affiliate/sign-up`, data, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                withCredentials: true
+            });
+
+            // Handle successful response
+            
+
+        } catch (error: any) {
+            console.error("Signup error:", error);
+
+            let errorMessage = "Registration failed. Please try again.";
+
+            if (axios.isAxiosError(error)) {
+                // Handle Axios-specific errors
+                if (error.response) {
+                    // Server responded with a status code outside 2xx
+                    errorMessage = error.response.data?.message ||
+                        error.response.data?.error ||
+                        `Server responded with status ${error.response.status}`;
+                } else if (error.request) {
+                    // Request was made but no response received
+                    errorMessage = "No response received from server. Please try again.";
+                } else {
+                    // Something happened in setting up the request
+                    errorMessage = "Request setup error. Please check your input.";
+                }
+            } else {
+                // Handle non-Axios errors
+                errorMessage = error.message || "An unexpected error occurred.";
+            }
+
+            toast.error(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     useEffect(() => {
@@ -442,7 +616,7 @@ const AffiliateOnBoard = () => {
                                     </div>
 
                                     {/* Email */}
-                                    <div className="w-90 max-w-md">
+                                    <div className="w-90 max-w-md group relative">
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                             <input
@@ -451,13 +625,18 @@ const AffiliateOnBoard = () => {
                                                 placeholder="Enter your Email"
                                                 className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                             />
+                                            {/* Tooltip */}
+                                            <div className="absolute left-0 -top-8 bg-gray-700 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                We will send all future details to this email
+                                            </div>
                                         </div>
-                                        <div className=" mt-1">
+                                        <div className="mt-1">
                                             {errors.email && (
                                                 <p className="text-red-500 text-xs">{errors.email.message}</p>
                                             )}
                                         </div>
                                     </div>
+
 
                                     {/* Phone Number Section */}
                                     <div className="w-90 max-w-md space-y-4">
@@ -465,8 +644,12 @@ const AffiliateOnBoard = () => {
                                         <div>
                                             <div className="relative">
                                                 <select
+                                                    {...register("countryCode")}
                                                     value={selectedCountry}
-                                                    onChange={(e) => setSelectedCountry(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setSelectedCountry(e.target.value);
+                                                        setValue("countryCode", e.target.value); // <-- updates form state
+                                                    }}
                                                     className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] appearance-none"
                                                 >
                                                     {countries.map((country) => (
@@ -475,6 +658,7 @@ const AffiliateOnBoard = () => {
                                                         </option>
                                                     ))}
                                                 </select>
+
                                                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                             </div>
                                         </div>
@@ -502,7 +686,7 @@ const AffiliateOnBoard = () => {
 
 
                             {step === 2 && (
-                                <div ref={containerRefs[2]} className="space-y-3 sm:space-y-3 flex flex-col items-center justify-center overflow-y-auto h-fit ">
+                                <div ref={containerRefs[2]} className="space-y-3 sm:space-y-3 flex flex-col items-center justify-center overflow-y-auto h-fit">
                                     {/* Affiliate Type Selection */}
                                     <div className="w-90 max-w-md px-4 sm:px-0">
                                         <h3 className="text-white text-lg font-medium mb-2">Are you registering as:</h3>
@@ -523,234 +707,251 @@ const AffiliateOnBoard = () => {
                                             </button>
                                         </div>
                                         <input type="hidden" {...register("affiliateType")} />
+
+                                        {/* Show message when no type is selected */}
+                                        {!watch("affiliateType") && (
+                                            <p className="mt-3 text-gray-400 text-sm">
+                                                Please select whether you're registering as an individual or a business to continue.
+                                            </p>
+                                        )}
                                     </div>
 
-                                    {watch("affiliateType") === "business" ? (
-                                        <div className="w-90   space-y-2 px-4 sm:px-0 overflow-y-auto h-fit">
-                                            {/* Business Name and Registration Number - Side by Side on larger screens */}
-                                            <div className="flex flex-col md:flex-row gap-2 p-2">
-                                                <div className="relative flex-1">
-                                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        {...register("businessName")}
-                                                        placeholder="Business Name"
-                                                        className="w-full bg-[#0d0d0d]  text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                    />
-                                                    {errors.businessName && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.businessName.message}</p>
-                                                    )}
+                                    {/* Only show fields after a type is selected */}
+                                    {watch("affiliateType") && (
+                                        watch("affiliateType") === "business" ? (
+                                            <div className="w-90 space-y-2 px-4 sm:px-0 overflow-y-auto h-fit">
+                                                {/* Business Name and Registration Number */}
+                                                <div className="flex flex-col md:flex-row gap-2 p-2">
+                                                    <div className="relative flex-1">
+                                                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("businessName", { required: "Business name is required" })}
+                                                            placeholder="Business Name"
+                                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.businessName && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.businessName.message}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="relative flex-1">
+                                                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("companyRegistrationNumber", { required: "Registration number is required" })}
+                                                            placeholder="Registration Number"
+                                                            className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.companyRegistrationNumber && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.companyRegistrationNumber.message}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                <div className="relative flex-1 ">
-                                                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        {...register("companyRegistrationNumber")}
-                                                        placeholder="Registration Number"
-                                                        className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                    />
-                                                    {errors.companyRegistrationNumber && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.companyRegistrationNumber.message}</p>
-                                                    )}
-                                                </div>
-                                            </div>
+                                                {/* VAT Number and Trading Address */}
+                                                <div className="flex flex-col md:flex-row gap-2 p-2">
+                                                    <div className="relative flex-1">
+                                                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("vatNumber")}
+                                                            placeholder="VAT Number (optional)"
+                                                            className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.vatNumber && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.vatNumber.message}</p>
+                                                        )}
+                                                    </div>
 
-                                            {/* VAT Number and Trading Address */}
-                                            <div className="flex flex-col md:flex-row gap-2 p-2">
-                                                <div className="relative flex-1">
-                                                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        {...register("vatNumber")}
-                                                        placeholder="VAT Number (optional)"
-                                                        className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                    />
-                                                    {errors.vatNumber && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.vatNumber.message}</p>
-                                                    )}
+                                                    <div className="relative flex-1">
+                                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("tradingAddress", { required: "Trading address is required" })}
+                                                            placeholder="Trading Address"
+                                                            className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.tradingAddress && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.tradingAddress.message}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                <div className="relative flex-1">
-                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        {...register("tradingAddress")}
-                                                        placeholder="Trading Address"
-                                                        className="w-full bg-[#0d0d0d] p-2 text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                    />
-                                                    {errors.tradingAddress && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.tradingAddress.message}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Province and City - Already responsive */}
-                                            <div className="flex flex-col sm:flex-row gap-2 p-2">
-                                                <div className="relative flex-1">
-                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
-                                                    <select
-                                                        {...register("province")}
-                                                        onChange={(e) => {
-                                                            setValue("province", e.target.value);
-                                                            setValue("city", ""); // Reset city when province changes
-                                                        }}
-                                                        className="w-full p-2 bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] appearance-none"
-                                                    >
-                                                        <option value="">Select Province</option>
-                                                        {provinces.map((province) => (
-                                                            <option key={province.name} value={province.name}>
-                                                                {province.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {errors.province && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.province.message}</p>
-                                                    )}
-                                                </div>
-                                                <div className="relative flex-1">
-                                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
-                                                    <select
-                                                        {...register("city")}
-                                                        disabled={!watch("province")}
-                                                        className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] appearance-none disabled:opacity-50"
-                                                    >
-                                                        <option value="">Select City</option>
-                                                        {watch("province") &&
-                                                            provinces.find(p => p.name === watch("province"))?.cities.map((city) => (
-                                                                <option key={city} value={city}>
-                                                                    {city}
+                                                {/* Province and City */}
+                                                <div className="flex flex-col sm:flex-row gap-2 p-2">
+                                                    <div className="relative flex-1">
+                                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
+                                                        <select
+                                                            {...register("province", { required: "Province is required" })}
+                                                            onChange={(e) => {
+                                                                setValue("province", e.target.value);
+                                                                setValue("city", ""); // Reset city when province changes
+                                                            }}
+                                                            className="w-full p-2 bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] appearance-none"
+                                                        >
+                                                            <option value="">Select Province</option>
+                                                            {provinces.map((province) => (
+                                                                <option key={province.name} value={province.name}>
+                                                                    {province.name}
                                                                 </option>
-                                                            ))
-                                                        }
-                                                    </select>
-                                                    {errors.city && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.city.message}</p>
-                                                    )}
+                                                            ))}
+                                                        </select>
+                                                        {errors.province && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.province.message}</p>
+                                                        )}
+                                                    </div>
+                                                    <div className="relative flex-1">
+                                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
+                                                        <select
+                                                            {...register("city", { required: "City is required" })}
+                                                            disabled={!watch("province")}
+                                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] appearance-none disabled:opacity-50"
+                                                        >
+                                                            <option value="">Select City</option>
+                                                            {watch("province") &&
+                                                                provinces.find(p => p.name === watch("province"))?.cities.map((city) => (
+                                                                    <option key={city} value={city}>
+                                                                        {city}
+                                                                    </option>
+                                                                ))
+                                                            }
+                                                        </select>
+                                                        {errors.city && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.city.message}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Contact Info */}
+                                                <div className="flex flex-col md:flex-row gap-2 p-2">
+                                                    <div className="relative flex-1">
+                                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("businessContactNumber", { required: "Contact number is required" })}
+                                                            placeholder="Contact Number"
+                                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.businessContactNumber && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.businessContactNumber.message}</p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="relative flex-1">
+                                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                        <input
+                                                            {...register("businessEmail", {
+                                                                required: "Business email is required",
+                                                                pattern: {
+                                                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                                                    message: "Invalid email address"
+                                                                }
+                                                            })}
+                                                            placeholder="Business Email"
+                                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                                        />
+                                                        {errors.businessEmail && (
+                                                            <p className="mt-1 text-red-500 text-xs">{errors.businessEmail.message}</p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            {/* Contact Info - Side by Side on larger screens */}
-                                            <div className="flex flex-col md:flex-row gap-2 p-2">
-                                                <div className="relative flex-1">
-                                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                        ) : (
+                                            /* Individual Registration Fields */
+                                            <div className="w-full max-w-md px-4 py-2 sm:px-0">
+                                                <div className="relative">
+                                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                                     <input
-                                                        {...register("businessContactNumber")}
-                                                        placeholder="Contact Number"
+                                                        {...register("idNumber", { required: "ID number is required" })}
+                                                        placeholder="ID Number"
                                                         className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                                     />
-                                                    {errors.businessContactNumber && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.businessContactNumber.message}</p>
-                                                    )}
-                                                </div>
-
-                                                <div className="relative flex-1">
-                                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        {...register("businessEmail")}
-                                                        placeholder="Business Email"
-                                                        className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                    />
-                                                    {errors.businessEmail && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.businessEmail.message}</p>
+                                                    {errors.idNumber && (
+                                                        <p className="mt-1 text-red-500 text-xs">{errors.idNumber.message}</p>
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        /* Individual Registration Fields */
-                                        <div className="w-full max-w-md px-4 py-2 sm:px-0">
-                                            <div className="relative">
-                                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                <input
-                                                    {...register("idNumber")}
-                                                    placeholder="ID Number"
-                                                    className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
-                                                />
-                                                {errors.idNumber && (
-                                                    <p className="mt-1 text-red-500 text-xs">{errors.idNumber.message}</p>
-                                                )}
-                                            </div>
-                                        </div>
+                                        )
                                     )}
                                 </div>
                             )}
 
+
                             {step === 3 && (
-                                <div ref={containerRefs[3]} className="space-y-3 w-full px-4 sm:px-0 overflow-y-auto max-w-md mx-auto">
-                                    <h3 className="text-white text-lg font-medium mb-4">Banking Information</h3>
+                                <div ref={containerRefs[3]} className="space-y-2  w-full px-1 sm:px-0  max-w-md mx-auto h-[300px] overflow-y-auto flex flex-col items-center">
+                                    <h3 className="text-white text-lg font-medium mb-2 self-start">Banking Information</h3>
 
                                     {/* Bank Name */}
-                                    <div className="relative">
+                                    <div className="relative ">
                                         <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             {...register("bankName")}
                                             placeholder="Bank Name"
-                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                            className="w-80 bg-[#0d0d0d]  text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                         />
                                         {errors.bankName && (
-                                            <p className="mt-1 text-red-500 text-xs">{errors.bankName.message}</p>
+                                            <p className="absolute  mt-1 mb-1 text-red-500 text-xs">{errors.bankName.message}</p>
                                         )}
                                     </div>
 
                                     {/* Account Holder Name */}
-                                    <div className="relative">
+                                    <div className="relative mt-4">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             {...register("accountHolder")}
                                             placeholder="Account Holder Name"
-                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                            className="w-80 bg-[#0d0d0d]  text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                         />
                                         {errors.accountHolder && (
-                                            <p className="mt-1 text-red-500 text-xs">{errors.accountHolder.message}</p>
+                                            <p className="absolute mt-1 text-red-500 text-xs">{errors.accountHolder.message}</p>
                                         )}
                                     </div>
 
                                     {/* Account Number */}
-                                    <div className="relative">
+                                    <div className="relative mt-4">
                                         <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             {...register("accountNumber")}
                                             placeholder="Account Number"
-                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                            className="w-80 bg-[#0d0d0d]  text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                         />
                                         {errors.accountNumber && (
-                                            <p className="mt-1 text-red-500 text-xs">{errors.accountNumber.message}</p>
+                                            <p className="absolute mt-1 text-red-500 text-xs">{errors.accountNumber.message}</p>
                                         )}
                                     </div>
 
                                     {/* Branch Code */}
-                                    <div className="relative">
+                                    <div className="relative mt-2">
                                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             {...register("branchCode")}
                                             placeholder="Branch Code"
-                                            className="w-full bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
+                                            className="w-80 bg-[#0d0d0d] text-white pl-10 pr-4 py-2 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400"
                                         />
                                         {errors.branchCode && (
-                                            <p className="mt-1 text-red-500 text-xs">{errors.branchCode.message}</p>
+                                            <p className="absolute mt-1 text-red-500 text-xs">{errors.branchCode.message}</p>
                                         )}
                                     </div>
 
                                     {/* Bank Statement Upload */}
-                                    <div className="pt-2">
+                                    <div className="relative mt-4">
                                         <label className="block text-sm font-medium text-gray-300 mb-2">
                                             Upload Bank Statement (PDF or Image)
                                         </label>
                                         <div className="flex items-center justify-center w-full">
                                             <label className="flex flex-col items-center justify-center w-full p-4 h-22 border-2 border-dashed rounded-sm border-[#d19f76] bg-[#0d0d0d] cursor-pointer hover:bg-[#1a1a1a] transition-colors">
                                                 <div className="flex flex-col items-center justify-center pt-2 pb-2 text-center">
-                                                    <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-2 sm:mb-3 text-[#d19f76]" />
-                                                    <p className="mb-1 sm:mb-2 text-xs sm:text-sm text-gray-400">
+                                                    <Upload className="w-6 h-6  mb-2 sm:mb-3 text-[#d19f76]" />
+                                                    <p className="mb-1 sm:mb-2 text-xs  text-gray-400">
                                                         <span className="font-semibold">Click to upload</span> or drag and drop
                                                     </p>
                                                     <p className="text-xs text-gray-500">PDF, PNG, JPG (MAX. 5MB)</p>
                                                 </div>
                                                 <input
                                                     type="file"
-                                                    className="hidden"
+                                                    className="hidden w-full"
                                                     accept=".pdf,.png,.jpg,.jpeg"
                                                     {...register("bankStatement")}
                                                     onChange={(e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
-                                                            setValue("bankStatement", file);
+                                                            setValue("bankStatement", file || null);
                                                         }
                                                     }}
                                                 />
@@ -759,11 +960,34 @@ const AffiliateOnBoard = () => {
                                         {errors.bankStatement && (
                                             <p className="mt-1 text-red-500 text-xs">{errors.bankStatement.message}</p>
                                         )}
-                                        {watch("bankStatement") && (
-                                            <p className="mt-2 text-sm text-green-400 truncate">
-                                                Selected: {watch("bankStatement").name}
-                                            </p>
-                                        )}
+
+                                        {/* Preview Link */}
+                                        <div className="flex items-center justify-between">
+                                            {watch("bankStatement") && (
+                                                <div className="mt-2">
+                                                    <a
+                                                        href={watch("bankStatement") ? URL.createObjectURL(watch("bankStatement")!) : undefined}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[#d19f76] hover:underline text-sm flex items-center"
+                                                    >
+                                                        <Eye className="w-4 h-4 mr-1" />
+                                                        Preview uploaded file
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {watch("bankStatement") && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setValue("bankStatement", null)}
+                                                    className="text-red-500 mt-2 hover:text-red-400 text-sm flex items-center"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+
                                     </div>
                                 </div>
                             )}
@@ -771,27 +995,27 @@ const AffiliateOnBoard = () => {
                             {step === 4 && (
                                 <>
                                     {stepQuestion === 1 && (
-                                        <div ref={containerRefs[5]} className="space-y-4 w-full ">
+                                        <div ref={containerRefs[5]} className="space-y-4 w-full px-2">
                                             <label className="block font-medium text-white text-2xl sm:text-4xl mb-2 text-center">
-                                                What platforms do your <span className="text-[#dda87c]">customers<br /> engage</span> you through?
+                                                What platforms do your <span className="text-[#dda87c]">customers<br className="sm:hidden" /> engage</span> you through?
                                             </label>
-                                            <p className="text-center text-sm mb-4">Select all that apply (Max 7)</p>
+
                                             {errors.promotionPlatforms && (
                                                 <p className="text-red-500 text-lg text-center mb-4">
                                                     {errors.promotionPlatforms.message}
                                                 </p>
                                             )}
                                             {/* Two-row layout matching the image */}
-                                            <div className="flex flex-col items-center gap-4">
+                                            <div className="flex flex-col items-center gap-4 mt-4">
                                                 {/* First row - 5 items */}
-                                                <div className="flex flex-wrap justify-center gap-3">
+                                                <div className="flex flex-wrap justify-center gap-3 sm:gap-3 mx-2">
                                                     {promotionPlatforms.slice(0, 5).map((i) => {
                                                         const currentInterests: any = getValues("promotionPlatforms") || [];
                                                         const isChecked = currentInterests.includes(i);
                                                         return (
                                                             <label
                                                                 key={i}
-                                                                className="cursor-pointer"
+                                                                className="cursor-pointer m-1 sm:m-0"
                                                             >
                                                                 <input
                                                                     type="checkbox"
@@ -801,13 +1025,13 @@ const AffiliateOnBoard = () => {
                                                                     {...register("promotionPlatforms")}
                                                                 />
                                                                 <span
-                                                                    className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                    className={`border-2 rounded-md px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg font-medium
+                  transition-all duration-300 whitespace-nowrap
+                  ${isChecked
                                                                             ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                             : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                         }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                  hover:bg-[#dda87c] hover:text-black`}
                                                                 >
                                                                     {i}
                                                                 </span>
@@ -818,14 +1042,14 @@ const AffiliateOnBoard = () => {
 
                                                 {/* Second row - remaining items */}
                                                 {promotionPlatforms.length > 5 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4 mb-4">
+                                                    <div className="flex flex-wrap justify-center gap-3 sm:gap-3 mt-2 sm:mt-4 mb-2 sm:mb-4 mx-2">
                                                         {promotionPlatforms.slice(5).map((i) => {
                                                             const currentInterests: any = getValues("promotionPlatforms") || [];
                                                             const isChecked = currentInterests.includes(i);
                                                             return (
                                                                 <label
                                                                     key={i}
-                                                                    className="cursor-pointer"
+                                                                    className="cursor-pointer m-1 sm:m-0"
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -835,13 +1059,13 @@ const AffiliateOnBoard = () => {
                                                                         {...register("promotionPlatforms")}
                                                                     />
                                                                     <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                        transition-all duration-300 whitespace-nowrap
-                                        ${isChecked
+                                                                        className={`border-2 rounded-md px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg font-medium
+                    transition-all duration-300 whitespace-nowrap
+                    ${isChecked
                                                                                 ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                                 : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                             }
-                                        hover:bg-[#dda87c] hover:text-black`}
+                    hover:bg-[#dda87c] hover:text-black`}
                                                                     >
                                                                         {i}
                                                                     </span>
@@ -885,20 +1109,20 @@ const AffiliateOnBoard = () => {
                                     )}
 
                                     {stepQuestion === 3 && (
-                                        <div ref={containerRefs[5]} className="space-y-4 w-full">
-                                            <label className="block font-medium text-white text-2xl sm:text-4xl mb-2 text-center">
-                                                What platforms do your <span className="text-[#dda87c]">customers<br /> engage</span> you through?
+                                        <div ref={containerRefs[5]} className="space-y-4 w-full px-2 sm:px-0">
+                                            <label className="block font-medium text-white text-2xl sm:text-3xl md:text-4xl mb-2 text-center">
+                                                What platforms do your <span className="text-[#dda87c]">customers<br className="sm:hidden" /> engage</span> you through?
                                             </label>
-                                            <p className="text-center text-sm mb-4 text-white" >Select all that apply (Max 5)</p>
+                                            <p className="text-center text-sm md:text-base  text-white md:mb-4">Select all that apply (Max 5)</p>
                                             {errors.contentTypes && (
-                                                <p className="text-red-500 text-lg text-center mb-4">
+                                                <p className="text-red-500 text-base sm:text-lg text-center mb-4">
                                                     {errors.contentTypes.message}
                                                 </p>
                                             )}
                                             {/* Three-row layout matching the image */}
-                                            <div className="flex flex-col items-center gap-4 px-4">
+                                            <div className="flex flex-col items-center gap-2 sm:gap-4 px-2 sm:px-4 md:mt-4">
                                                 {/* First row - 4 items */}
-                                                <div className="flex flex-wrap justify-center gap-3">
+                                                <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
                                                     {contentTypes.slice(0, 4).map((i) => {
                                                         const currentInterests: any = getValues("contentTypes") || [];
                                                         const isChecked = currentInterests.includes(i);
@@ -907,7 +1131,7 @@ const AffiliateOnBoard = () => {
                                                         return (
                                                             <label
                                                                 key={i}
-                                                                className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                             >
                                                                 <input
                                                                     type="checkbox"
@@ -918,13 +1142,13 @@ const AffiliateOnBoard = () => {
                                                                     {...register("contentTypes")}
                                                                 />
                                                                 <span
-                                                                    className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                    className={`border-2 rounded-md px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                  transition-all duration-300 whitespace-nowrap
+                  ${isChecked
                                                                             ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                             : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                         }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                  hover:bg-[#dda87c] hover:text-black`}
                                                                 >
                                                                     {i}
                                                                 </span>
@@ -935,7 +1159,7 @@ const AffiliateOnBoard = () => {
 
                                                 {/* Second row - 3 items */}
                                                 {contentTypes.length > 4 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4">
+                                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-1 sm:mt-2 md:mt-4">
                                                         {contentTypes.slice(4, 7).map((i) => {
                                                             const currentInterests: any = getValues("contentTypes") || [];
                                                             const isChecked = currentInterests.includes(i);
@@ -944,7 +1168,7 @@ const AffiliateOnBoard = () => {
                                                             return (
                                                                 <label
                                                                     key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -955,13 +1179,13 @@ const AffiliateOnBoard = () => {
                                                                         {...register("contentTypes")}
                                                                     />
                                                                     <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                        className={`border-2 rounded-md px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                    transition-all duration-300 whitespace-nowrap
+                    ${isChecked
                                                                                 ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                                 : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                             }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                    hover:bg-[#dda87c] hover:text-black`}
                                                                     >
                                                                         {i}
                                                                     </span>
@@ -973,7 +1197,7 @@ const AffiliateOnBoard = () => {
 
                                                 {/* Third row - remaining items */}
                                                 {contentTypes.length > 7 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4 mb-4">
+                                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-1 sm:mt-2 md:mt-4 mb-2 sm:mb-4">
                                                         {contentTypes.slice(7).map((i) => {
                                                             const currentInterests: any = getValues("contentTypes") || [];
                                                             const isChecked = currentInterests.includes(i);
@@ -982,7 +1206,7 @@ const AffiliateOnBoard = () => {
                                                             return (
                                                                 <label
                                                                     key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -993,13 +1217,13 @@ const AffiliateOnBoard = () => {
                                                                         {...register("contentTypes")}
                                                                     />
                                                                     <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                        className={`border-2 rounded-md px-3 py-2 sm:px-4 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                    transition-all duration-300 whitespace-nowrap
+                    ${isChecked
                                                                                 ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                                 : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                             }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                    hover:bg-[#dda87c] hover:text-black`}
                                                                     >
                                                                         {i}
                                                                     </span>
@@ -1013,23 +1237,23 @@ const AffiliateOnBoard = () => {
                                     )}
 
                                     {stepQuestion === 4 && (
-                                        <div ref={containerRefs[5]} className="space-y-4 w-full">
-                                            <label className="block font-medium text-white text-2xl sm:text-4xl mb-2 text-center">
-                                                What do you want to <span className="text-[#dda87c]">
-                                                    achieve</span> as a <span className="text-[#dda87c]">
-                                                    Menu <br /> affiliate?
-                                                </span>
-                                            </label>
-                                            <p className="text-center text-sm mb-4 text-white">Select all that apply (Max 5)</p>
-                                            {errors.affiliateGoals && (
-                                                <p className="text-red-500 text-lg text-center mb-4">
-                                                    {errors.affiliateGoals.message}
-                                                </p>
-                                            )}
-                                            {/* Three-row layout matching the image */}
-                                            <div className="flex flex-col items-center gap-4 px-4 mt-10">
+                                        <div ref={containerRefs[5]} className="space-y-4 w-full px-2 sm:px-0">
+                                            <div className="mb-6 sm:mb-8 md:mb-10"> {/* Added margin container for heading */}
+                                                <label className="block font-medium text-white text-2xl sm:text-3xl md:text-4xl mb-2 text-center">
+                                                    What do you want to <span className="text-[#dda87c]">achieve</span> as a <span className="text-[#dda87c]">Menu<br className="sm:hidden" /> affiliate?</span>
+                                                </label>
+                                                <p className="text-center text-sm md:text-base mb-0 text-white">Select all that apply (Max 5)</p>
+                                                {errors.affiliateGoals && (
+                                                    <p className="text-red-500 text-base sm:text-lg text-center mt-2">
+                                                        {errors.affiliateGoals.message}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Three-row layout for options */}
+                                            <div className="flex flex-col items-center gap-3 sm:gap-4 px-2 sm:px-4">
                                                 {/* First row - 4 items */}
-                                                <div className="flex flex-wrap justify-center gap-3">
+                                                <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
                                                     {affiliateGoals.slice(0, 4).map((i) => {
                                                         const currentInterests: any = getValues("affiliateGoals") || [];
                                                         const isChecked = currentInterests.includes(i);
@@ -1038,7 +1262,7 @@ const AffiliateOnBoard = () => {
                                                         return (
                                                             <label
                                                                 key={i}
-                                                                className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                             >
                                                                 <input
                                                                     type="checkbox"
@@ -1049,13 +1273,13 @@ const AffiliateOnBoard = () => {
                                                                     {...register("affiliateGoals")}
                                                                 />
                                                                 <span
-                                                                    className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                    className={`border-2 rounded-md px-4 py-2 sm:px-5 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                  transition-all duration-300 whitespace-nowrap
+                  ${isChecked
                                                                             ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                             : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                         }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                  hover:bg-[#dda87c] hover:text-black`}
                                                                 >
                                                                     {i}
                                                                 </span>
@@ -1066,7 +1290,7 @@ const AffiliateOnBoard = () => {
 
                                                 {/* Second row - 3 items */}
                                                 {affiliateGoals.length > 4 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4">
+                                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-2 sm:mt-3">
                                                         {affiliateGoals.slice(4, 7).map((i) => {
                                                             const currentInterests: any = getValues("affiliateGoals") || [];
                                                             const isChecked = currentInterests.includes(i);
@@ -1075,7 +1299,7 @@ const AffiliateOnBoard = () => {
                                                             return (
                                                                 <label
                                                                     key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -1086,13 +1310,13 @@ const AffiliateOnBoard = () => {
                                                                         {...register("affiliateGoals")}
                                                                     />
                                                                     <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                        className={`border-2 rounded-md px-4 py-2 sm:px-5 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                    transition-all duration-300 whitespace-nowrap
+                    ${isChecked
                                                                                 ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                                 : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                             }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                    hover:bg-[#dda87c] hover:text-black`}
                                                                     >
                                                                         {i}
                                                                     </span>
@@ -1104,7 +1328,7 @@ const AffiliateOnBoard = () => {
 
                                                 {/* Third row - remaining items */}
                                                 {affiliateGoals.length > 7 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4 mb-4">
+                                                    <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full mt-2 sm:mt-3 mb-2 sm:mb-4">
                                                         {affiliateGoals.slice(7).map((i) => {
                                                             const currentInterests: any = getValues("affiliateGoals") || [];
                                                             const isChecked = currentInterests.includes(i);
@@ -1113,7 +1337,7 @@ const AffiliateOnBoard = () => {
                                                             return (
                                                                 <label
                                                                     key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    className={`cursor-pointer m-1 sm:m-0 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -1124,13 +1348,13 @@ const AffiliateOnBoard = () => {
                                                                         {...register("affiliateGoals")}
                                                                     />
                                                                     <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
+                                                                        className={`border-2 rounded-md px-4 py-2 sm:px-5 sm:py-2 md:px-6 md:py-3 text-sm sm:text-base md:text-lg font-medium
+                    transition-all duration-300 whitespace-nowrap
+                    ${isChecked
                                                                                 ? "bg-[#dda87c] text-black border-[#dda87c]"
                                                                                 : "bg-transparent text-[#dda87c] border-[#dda87c]"
                                                                             }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                    hover:bg-[#dda87c] hover:text-black`}
                                                                     >
                                                                         {i}
                                                                     </span>
@@ -1172,31 +1396,29 @@ const AffiliateOnBoard = () => {
                                     )}
 
                                     {stepQuestion === 6 && (
-                                        <div ref={containerRefs[5]} className="space-y-4 w-full">
-                                            <label className="block font-medium text-white text-2xl sm:text-4xl mb-2 text-center">
-                                                What types of <span className=
-                                                    'text-[#dda87c]'>
-                                                    brands</span> do you want to<br /> <span className="text-[#dda87c]">promote on The Menu?</span>
+                                        <div ref={containerRefs[5]} className="space-y-4 md:space-y-6 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                                            <label className="block font-medium text-white text-xl sm:text-2xl lg:text-3xl xl:text-4xl mb-2 sm:mb-4 text-center">
+                                                What types of <span className='text-[#dda87c]'>brands</span> do you want to
+                                                <br className="hidden sm:block" /> <span className="text-[#dda87c]">promote on The Menu?</span>
                                             </label>
-                                            <p className="text-center text-sm mb-4 text-white">Select all that apply (Max 5)</p>
+                                            <p className="text-center text-sm sm:text-base mb-4 sm:mb-6 text-white/80">Select all that apply (Max 5)</p>
                                             {errors.affiliateGoals && (
-                                                <p className="text-red-500 text-lg text-center mb-4">
+                                                <p className="text-red-500 text-sm sm:text-base text-center mb-4 sm:mb-6">
                                                     {errors.affiliateGoals.message}
                                                 </p>
                                             )}
-                                            {/* Three-row layout matching the image */}
-                                            <div className="flex flex-col items-center gap-4 px-4 mt-10">
-                                                {/* First row - 4 items */}
-                                                <div className="flex flex-wrap justify-center gap-3">
-                                                    {brandTypes.slice(0, 4).map((i) => {
-                                                        const currentInterests: any = getValues("brandTypes") || [];
-                                                        const isChecked = currentInterests.includes(i);
-                                                        const isDisabled = !isChecked && currentInterests.length >= 5;
 
+                                            {/* Responsive grid layout */}
+                                            <div className="mt-6 sm:mt-8 md:mt-10">
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                                                    {brandTypes.map((i) => {
+                                                        const selectedBrands: any = watch("brandTypes") || [];
+                                                        const isChecked = selectedBrands.includes(i);
+                                                        const isDisabled = !isChecked && selectedBrands.length >= 5;
                                                         return (
                                                             <label
                                                                 key={i}
-                                                                className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                className={`cursor-pointer block ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                             >
                                                                 <input
                                                                     type="checkbox"
@@ -1204,99 +1426,43 @@ const AffiliateOnBoard = () => {
                                                                     checked={isChecked}
                                                                     disabled={isDisabled}
                                                                     className="hidden peer"
-                                                                    {...register("affiliateGoals")}
+                                                                    {...register("brandTypes", {
+                                                                        validate: (value) =>
+                                                                            (value && value.length <= 5) || "Maximum 5 selections allowed"
+                                                                    })}
+                                                                    onChange={(e) => {
+                                                                        const newSelection = e.target.checked
+                                                                            ? [...(selectedBrands || []), i]
+                                                                            : (selectedBrands || []).filter((brand: string) => brand !== i);
+                                                                        setValue("brandTypes", newSelection);
+                                                                    }}
                                                                 />
                                                                 <span
-                                                                    className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
+                                                                    className={`
+                                     w-full text-center
+                                    border-2 rounded-lg 
+                                    
+                                    text-xs sm:text-sm md:text-base lg:text-lg 
+                                    font-medium leading-tight
+                                    transition-all duration-300 ease-in-out
+                                    transform hover:scale-105
+                                    min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] lg:min-h-[4.5rem]
+                                    flex items-center justify-center
                                     ${isChecked
-                                                                            ? "bg-[#dda87c] text-black border-[#dda87c]"
-                                                                            : "bg-transparent text-[#dda87c] border-[#dda87c]"
+                                                                            ? "bg-[#dda87c] text-black border-[#dda87c] shadow-lg shadow-[#dda87c]/25"
+                                                                            : "bg-transparent text-[#dda87c] border-[#dda87c] hover:border-[#dda87c]/80"
                                                                         }
-                                    hover:bg-[#dda87c] hover:text-black`}
+                                    ${!isDisabled ? "hover:bg-[#dda87c]/90 hover:text-black hover:shadow-md" : ""}
+                                `}
                                                                 >
-                                                                    {i}
+                                                                    <span className="break-words hyphens-auto">
+                                                                        {i}
+                                                                    </span>
                                                                 </span>
                                                             </label>
                                                         );
                                                     })}
                                                 </div>
-
-                                                {/* Second row - 3 items */}
-                                                {brandTypes.length > 4 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4">
-                                                        {affiliateGoals.slice(4, 7).map((i) => {
-                                                            const currentInterests: any = getValues("brandTypes") || [];
-                                                            const isChecked = currentInterests.includes(i);
-                                                            const isDisabled = !isChecked && currentInterests.length >= 5;
-
-                                                            return (
-                                                                <label
-                                                                    key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                                >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        value={i}
-                                                                        checked={isChecked}
-                                                                        disabled={isDisabled}
-                                                                        className="hidden peer"
-                                                                        {...register("brandTypes")}
-                                                                    />
-                                                                    <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
-                                                                                ? "bg-[#dda87c] text-black border-[#dda87c]"
-                                                                                : "bg-transparent text-[#dda87c] border-[#dda87c]"
-                                                                            }
-                                    hover:bg-[#dda87c] hover:text-black`}
-                                                                    >
-                                                                        {i}
-                                                                    </span>
-                                                                </label>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-
-                                                {/* Third row - remaining items */}
-                                                {brandTypes.length > 7 && (
-                                                    <div className="flex flex-wrap justify-center gap-3 mt-4 mb-4">
-                                                        {affiliateGoals.slice(7).map((i) => {
-                                                            const currentInterests: any = getValues("affiliateGoals") || [];
-                                                            const isChecked = currentInterests.includes(i);
-                                                            const isDisabled = !isChecked && currentInterests.length >= 5;
-
-                                                            return (
-                                                                <label
-                                                                    key={i}
-                                                                    className={`cursor-pointer ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                                >
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        value={i}
-                                                                        checked={isChecked}
-                                                                        disabled={isDisabled}
-                                                                        className="hidden peer"
-                                                                        {...register("brandTypes")}
-                                                                    />
-                                                                    <span
-                                                                        className={`border-2 rounded-md px-6 py-3 text-lg font-medium
-                                    transition-all duration-300 whitespace-nowrap
-                                    ${isChecked
-                                                                                ? "bg-[#dda87c] text-black border-[#dda87c]"
-                                                                                : "bg-transparent text-[#dda87c] border-[#dda87c]"
-                                                                            }
-                                    hover:bg-[#dda87c] hover:text-black`}
-                                                                    >
-                                                                        {i}
-                                                                    </span>
-                                                                </label>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -1446,9 +1612,6 @@ const AffiliateOnBoard = () => {
                         <form onSubmit={handleSubmit(onSubmit)} className="flex items-center justify-center flex-col">
                             <div className="space-y-6 w-full max-w-md mx-auto">
                                 <div className="text-center mb-8">
-                                    <h2 className="text-white text-2xl sm:text-4xl font-medium mb-2">
-                                        Create Your <span className="text-[#dda87c]">Password</span>
-                                    </h2>
                                     <p className="text-gray-400 text-sm">
                                         Keep your account secure with a strong password
                                     </p>
@@ -1460,11 +1623,12 @@ const AffiliateOnBoard = () => {
                                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             type={showPassword ? "text" : "password"}
-                                            {...register("password")}
+                                            {...register("password", { required: "Password is required" })}
                                             defaultValue={formData.password || ""}
                                             placeholder="Password"
                                             className="w-full bg-[#0d0d0d] text-white px-10 py-2 pr-10 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400 border border-gray-600"
                                         />
+
                                         <div
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-[#dda87c] transition-colors"
                                             onClick={() => setShowPassword(!showPassword)}
@@ -1483,11 +1647,12 @@ const AffiliateOnBoard = () => {
                                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
-                                            {...register("confirmPassword")}
+                                            {...register("confirmPassword", { required: "Please confirm your password" })}
                                             defaultValue={formData.confirmPassword || ""}
                                             placeholder="Confirm Password"
                                             className="w-full bg-[#0d0d0d] text-white px-10 py-2 pr-10 h-11 rounded-sm focus:outline-none focus:ring-1 focus:ring-[#d19f76] placeholder-gray-400 border border-gray-600"
                                         />
+
                                         <div
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-[#dda87c] transition-colors"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -1502,7 +1667,24 @@ const AffiliateOnBoard = () => {
                                     </div>
                                 </div>
 
-                                {/* Password Requirements */}
+                                {/* Agree to Terms Checkbox */}
+                                <div className="flex items-start gap-2 mt-4 w-full max-w-md">
+                                    <input
+                                        type="checkbox"
+                                        {...register("agreedToTerms")}
+                                        id="agreedToTerms"
+                                        className="mt-1 h-4 w-4 text-[#d19f76] bg-[#0d0d0d] border border-gray-600 rounded focus:ring-[#d19f76]"
+                                    />
+                                    <label htmlFor="agreedToTerms" className="text-sm text-white select-none">
+                                        I agree to the <span className="text-[#d19f76] underline cursor-pointer">Terms and Conditions</span>
+                                    </label>
+                                </div>
+                                {errors.agreedToTerms && (
+                                    <p className="text-red-500 text-xs mt-1 ml-1">
+                                        {errors.agreedToTerms.message}
+                                    </p>
+                                )}
+
                                 <div className="bg-[#1a1a1a] p-4 rounded-md border border-gray-700 text-white">
                                     recaptcha
                                 </div>
@@ -1513,21 +1695,31 @@ const AffiliateOnBoard = () => {
                                     console.log('Form Values:', getValues());
                                     console.log('Form Errors:', errors);
                                 }}
-                                className={`w-full m-4 bg-[#523d2b] hover:bg-[#c78a63] text-white px-6 py-2 rounded-lg shadow cursor-pointer`}
+                                className={`w-full m-4 bg-[#523d2b] hover:bg-[#c78a63] text-white px-6 py-2 rounded-lg shadow ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                                    }`}
+                                disabled={isSubmitting}
                             >
-                                Submit
+                                {isSubmitting ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        Processing...
+                                    </div>
+                                ) : (
+                                    'Submit'
+                                )}
                             </button>
                         </form>
-                    )}
+                    )
+                    }
 
-                </div>
-            </div>
+                </div >
+            </div >
             <img src="/images/grad.avif" alt="" className="absolute bottom-0 left-0 " />
             <div className="absolute bottom-0 right-10 m-4 flex gap-24">
                 <Star height="h-14" width="w-1" />
                 <Star width="w-1" height="h-24" />
             </div>
-        </main>
+        </main >
     );
 }
 

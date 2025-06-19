@@ -10,60 +10,87 @@ import { verifyCaptcha } from '../utils/verifyReCaptcha.js';
 export const LoginAffiliate = async (req, res) => {
     try {
         const { email, password, reCaptcha } = req.body;
+
         if (!email || !password)
             return res.status(400).json({ message: "Please enter complete details" });
-        if (!reCaptcha)
-            return res.status(400).json({ message: "Please complete the reCaptcha" });
-        const isReCaptchaValid = await verifyCaptcha(reCaptcha);
-        if (!isReCaptchaValid)
-            return res.status(400).json({ message: "Invalid reCaptcha please reload and try again" });
+        // if (!reCaptcha)
+        //     return res.status(400).json({ message: "Please complete the reCaptcha" });
+
+        // const isReCaptchaValid = await verifyCaptcha(reCaptcha);
+        // if (!isReCaptchaValid)
+        //     return res.status(400).json({ message: "Invalid reCaptcha. Please reload and try again." });
 
         const checkUser = await affiliateModel.findOne({ email });
         if (!checkUser)
-            return res.status(404).json({ message: "User not found please check details and try again" });
+            return res.status(404).json({ message: "User not found. Please check details and try again." });
 
-        const isPasswordCorrect = await checkUser.comparePassword(password);
-        if (!isPasswordCorrect) {
-            return res.status(400).json({ message: "Invalid email or password" });
+        if (checkUser.status === "pending")
+            return res.status(403).json({
+                message: "Your account is currently under review. Please wait for approval before accessing the system."
+            });
+
+        if (checkUser.status === "rejected") {
+            return res.status(403).json({
+                message: "Your application has been rejected by the admin. Please register again or contact support."
+            });
         }
+        const isPasswordCorrect = await checkUser.comparePassword(password);
+        if (!isPasswordCorrect)
+            return res.status(400).json({ message: "Invalid email or password" });
+
         const payload = {
             id: checkUser._id,
+            name:checkUser.name,
+            email:checkUser.email,
             role: "affiliate"
-        }
-        const token = generateToken(payload, "1h");
-        res.cookie('token', token, {
+        };
+
+        const accessToken = generateToken(payload, "1h");
+        const frontendToken = generateToken(payload, "7d");
+
+        res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: false,
             sameSite: 'strict',
-            maxAge: 7 * 60 * 60 * 1000,
+            maxAge: 1 * 60 * 60 * 1000
         });
-        return res.status(200).json({ message: "Login successful" });
+
+        return res.status(200).json({
+            message: "Login successful",
+            frontendToken,
+            user:{
+                id:checkUser.id,
+                name:checkUser.name,
+                role:"affiliate"
+            }
+        });
     }
     catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 
 export const signupAffiliate = async (req, res) => {
     try {
         const {
-            fullName,
+            name,
             surname,
             email,
             password,
-            phoneNumber,
-            type,
+            phone,
+            affiliateType,
             bankName,
             accountHolder,
             accountNumber,
             branchCode,
             ...rest
         } = req.body;
-
-
-        if (!fullName || !surname || !email || !password || !phoneNumber || !type || !bankName || !accountHolder || !accountNumber || !branchCode) {
+        console.log("=================================================")
+        console.log("The req is coming", req.body);
+        console.log("=================================================")
+        if (!name || !surname || !email || !password || !phone || !affiliateType || !bankName || !accountHolder || !accountNumber || !branchCode) {
             return res.status(400).json({ message: "Please fill in all required fields." });
         }
 
@@ -73,12 +100,12 @@ export const signupAffiliate = async (req, res) => {
         }
 
         const newAffiliate = new affiliateModel({
-            fullName,
+            name,
             surname,
             email,
             password,
-            phoneNumber,
-            type,
+            phone,
+            affiliateType,
             bankName,
             accountHolder,
             accountNumber,
@@ -87,10 +114,11 @@ export const signupAffiliate = async (req, res) => {
         });
 
         await newAffiliate.save();
-        return res.status(200).json({ message: "Affiliate registered successfully." });
+        console.log("new : ", newAffiliate)
+        return res.status(200).json({ message: "Affiliate registered successfully. Please wait for the approval" });
 
     } catch (error) {
-        console.error("Signup error:", error);
+        console.log("Signup error:", error);
         return res.status(500).json({ message: "Internal server error. Please try again later." });
     }
 };
@@ -320,7 +348,7 @@ export const updateAffiliate = async (req, res) => {
             return res.status(400).json({ message: "Affiliate ID is required" });
         }
         const updateData = { ...req.body };
-       
+
         const checkAffiliate = await affiliateModel.findById(id);
         if (!checkAffiliate)
             return res.status(404).json({ message: "Affiliate not found" });

@@ -2,11 +2,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const affiliateSchema = new mongoose.Schema({
-    fullName: { type: String, required: true, trim: true },
+    name: { type: String, required: true, trim: true },
     surname: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    phoneNumber: { type: String, required: true, trim: true },
-    type: { type: String, enum: ["individual", "business"], required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    affiliateType: { type: String, enum: ["individual", "business"], required: true, trim: true },
     businessName: { type: String, default: null, trim: true },
     companyRegistrationNumber: { type: String, default: null, trim: true },
     vatNumber: { type: String, default: null, trim: true },
@@ -20,7 +20,7 @@ const affiliateSchema = new mongoose.Schema({
         default: "pending",
         trim: true
     },
-    
+
     password: {
         type: String,
         required: [true, "Password is required"],
@@ -48,7 +48,6 @@ const affiliateSchema = new mongoose.Schema({
             "50,001 – 100,000",
             "Over 100,000"
         ],
-       
     },
 
     contentTypes: {
@@ -72,23 +71,21 @@ const affiliateSchema = new mongoose.Schema({
     affiliateGoals: {
         type: [String],
         enum: [
-            "Earn recurring commissions.",
-            "Promote latest brands.",
-            "Gain first access to vendor deals.",
-            "Collaborate with top vendors.",
+            "Earn recurring commissions",
+            "Promote latest brands",
+            "Gain first access to vendor deals",
+            "Collaborate with top vendors",
             "Get featured by The Menu",
             "Access sponsored trade campaigns",
-            "Build influence in a niche market.",
-            "Lead giveaways & raffles."
+            "Build influence in a niche market",
+            "Lead giveaways & raffles"
         ],
         validate: [v => v.length <= 5, "Maximum 5 goals allowed"],
-       
     },
 
     currentBrandAffiliation: {
         type: String,
-        enum: ["Yes", "No", "Planning to start soon."],
-       
+        enum: ["Yes", "No", "Planning to start soon"],
     },
 
     preferredBrandTypes: {
@@ -105,19 +102,16 @@ const affiliateSchema = new mongoose.Schema({
             "Education & Training"
         ],
         validate: [v => v.length <= 5, "Maximum 5 preferred brand types allowed"],
-        
     },
 
     sharingFrequency: {
         type: String,
-        enum: ["Daily", "Weekly", "Bi-weekly", "Monthly", "Ad hoc, based on campaign fit."],
-        
+        enum: ["Daily", "Weekly", "Bi-weekly", "Monthly", "Ad hoc, based on campaign fit"],
     },
 
     openToFeature: {
         type: String,
-        enum: ["Yes", "No", "Depends on campaign type."],
-        
+        enum: ["Yes", "No", "Depends on campaign type"],
     },
 
     targetAudience: { type: String, default: null, trim: true },
@@ -187,5 +181,24 @@ affiliateSchema.pre("save", async function (next) {
 affiliateSchema.methods.comparePassword = async function (password) {
     return bcrypt.compare(password, this.password);
 };
+
+affiliateSchema.set("toObject", { virtuals: true });
+affiliateSchema.set("toJSON", { virtuals: true });
+
+affiliateSchema.virtual("referralsGiven", {
+    ref: "referralModel",
+    localField: "_id",
+    foreignField: "referrer",
+    justOne: false,
+    options: { match: { referrerModel: "Affiliate" } }
+});
+
+affiliateSchema.virtual("referralsReceived", {
+    ref: "referralModel",
+    localField: "_id",
+    foreignField: "referred",
+    justOne: false,
+    options: { match: { referredModel: "Affiliate" } }
+});
 
 export default mongoose.model("Affiliate", affiliateSchema);

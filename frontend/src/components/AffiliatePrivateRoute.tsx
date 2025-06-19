@@ -10,7 +10,7 @@ interface JwtPayload {
 
 const AffiliatePrivateRoute = () => {
   const token = localStorage.getItem("frontendToken");
-
+  console.log(token);
   if (!token) {
     return <Navigate to="/login" />;
   }
